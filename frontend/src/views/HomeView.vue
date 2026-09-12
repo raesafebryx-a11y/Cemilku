@@ -1418,7 +1418,7 @@ const getSpicyLabel = (level) => ['Tidak Pedas', 'Ringan', 'Sedang', 'Pedas', 'S
 }
 
 .btn-wa-checkout {
-  width: 100%;
+  width: 101;
   height: 44px;
   border-radius: 12px;
   font-size: 0.72rem;
