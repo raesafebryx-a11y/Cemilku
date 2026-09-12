@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+// Data Sample Order Items
 const orderItems = ref([
   { id: 101, orderId: 'ORD-001', productName: 'Keripik Kaca', qty: 2, subtotal: 'Rp 24.000' },
   { id: 102, orderId: 'ORD-001', productName: 'Basreng Pedas Jeruk', qty: 1, subtotal: 'Rp 15.000' },
@@ -17,45 +18,82 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="admin-dashboard">
-    <header class="admin-navbar">
-      <div class="navbar-container">
-        <div class="brand-logo" @click="router.push('/')">
-          <div class="brand-mark">C</div>
-          <div class="brand-info">
-            <span class="brand-text">Cemilku</span>
-            <small>ADMIN PANEL</small>
-          </div>
-        </div>
-
-        <nav class="admin-menu">
-          <router-link to="/admin/dashboard" class="menu-item">Dashboard</router-link>
-          <router-link to="/admin/produk" class="menu-item">Produk</router-link>
-          <router-link to="/admin/kategori" class="menu-item">Kategori</router-link>
-          <router-link to="/admin/order" class="menu-item">Order</router-link>
-          <router-link to="/admin/order-items" class="menu-item active">Order Items</router-link>
-        </nav>
-
-        <div class="nav-actions">
-          <router-link to="/" class="btn-outline-home">Ke Home</router-link>
-          <button @click="handleLogout" class="btn-logout">Keluar</button>
-        </div>
+  <div class="dashboard-layout">
+    <!-- SIDEBAR KIRI -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">C</div>
+        <span class="brand-text">Cemilku UI</span>
       </div>
-    </header>
 
-    <main class="dashboard-main">
-      <div class="container">
+      <nav class="sidebar-menu">
+        <div class="menu-category">MAIN</div>
+        <router-link to="/admin" class="menu-item">
+          <span class="menu-icon">📊</span> Dashboard
+        </router-link>
+
+        <div class="menu-category">KELOLA TOKO</div>
+        <router-link to="/admin/produk" class="menu-item">
+          <span class="menu-icon">🍿</span> Produk
+        </router-link>
+        
+        <router-link to="/admin/kategori" class="menu-item">
+          <span class="menu-icon">🏷️</span> Kategori
+        </router-link>
+
+        <router-link to="/admin/order" class="menu-item">
+          <span class="menu-icon">📑</span> Order
+        </router-link>
+
+        <router-link to="/admin/order-item" class="menu-item active">
+          <span class="menu-icon">📋</span> Order Item
+        </router-link>
+
+        <div class="menu-category">SISTEM</div>
+        <router-link to="/admin/pengaturan" class="menu-item">
+          <span class="menu-icon">⚙️</span> Pengaturan
+        </router-link>
+        
+        <a href="#" @click.prevent="handleLogout" class="menu-item logout">
+          <span class="menu-icon">🚪</span> Keluar
+        </a>
+      </nav>
+    </aside>
+
+    <!-- KONTEN UTAMA -->
+    <div class="main-wrapper">
+      <!-- TOP NAVBAR / HEADER -->
+      <header class="topbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Cari ID item / produk..." />
+        </div>
+
+        <div class="topbar-right">
+          <button class="icon-btn">🔔</button>
+          <div class="user-avatar">A</div>
+        </div>
+      </header>
+
+      <!-- CONTENT BODY -->
+      <main class="content-body">
+        <!-- HERO BANNER -->
         <div class="dashboard-banner">
-          <div>
-            <span class="section-label">DETAIL ITEM</span>
-            <h1>Kelola Order Items</h1>
-            <p>Rincian item produk yang dipesan dalam transaksi.</p>
+          <div class="banner-content">
+            <div>
+              <h1>Kelola Order Items</h1>
+              <p class="banner-sub">Rincian item produk yang dipesan dalam transaksi.</p>
+            </div>
           </div>
         </div>
 
-        <section class="recent-orders-section">
-          <div class="table-wrapper">
-            <table class="orders-table">
+        <!-- TABLE CARD -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Rincian Produk Dipesan</h3>
+          </div>
+          <div class="table-responsive">
+            <table>
               <thead>
                 <tr>
                   <th>ID Item</th>
@@ -67,51 +105,263 @@ const handleLogout = () => {
               </thead>
               <tbody>
                 <tr v-for="item in orderItems" :key="item.id">
-                  <td><strong>#{{ item.id }}</strong></td>
+                  <td class="font-bold">#{{ item.id }}</td>
                   <td>{{ item.orderId }}</td>
-                  <td>{{ item.productName }}</td>
-                  <td>{{ item.qty }} pcs</td>
+                  <td class="font-bold">{{ item.productName }}</td>
+                  <td><span class="qty-badge">{{ item.qty }} pcs</span></td>
                   <td><span class="price-tag">{{ item.subtotal }}</span></td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </section>
-      </div>
-    </main>
-
-    <footer class="admin-footer">
-      <div class="container">© 2026 Cemilku Snack Store — Admin Management</div>
-    </footer>
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.admin-dashboard { min-height: 100vh; display: flex; flex-direction: column; background-color: #fafafa; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #1e293b; }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-.admin-navbar { background: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 14px 0; }
-.navbar-container { max-width: 1200px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
-.brand-logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-.brand-mark { background: #ea580c; color: white; font-weight: 800; font-size: 20px; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-.brand-info { display: flex; flex-direction: column; }
-.brand-text { font-weight: 700; font-size: 18px; color: #0f172a; line-height: 1.1; }
-.brand-info small { font-size: 10px; letter-spacing: 0.5px; color: #ea580c; font-weight: 700; }
-.admin-menu { display: flex; gap: 8px; }
-.menu-item { text-decoration: none; color: #64748b; font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; }
-.menu-item:hover, .menu-item.active { color: #ea580c; background-color: #fff7ed; }
-.nav-actions { display: flex; align-items: center; gap: 12px; }
-.btn-outline-home { text-decoration: none; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #334155; }
-.btn-logout { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.dashboard-main { flex: 1; padding: 36px 0; }
-.dashboard-banner { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; text-align: left; }
-.section-label { color: #ea580c; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
-.dashboard-banner h1 { font-size: 32px; font-weight: 800; color: #0f172a; margin: 6px 0; }
-.dashboard-banner p { color: #64748b; font-size: 14px; margin: 0; }
-.recent-orders-section { background: #ffffff; border: 1px solid #f1f5f9; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); text-align: left; }
-.table-wrapper { overflow-x: auto; }
-.orders-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.orders-table th { background: #f8fafc; padding: 12px 16px; color: #475569; font-weight: 600; text-align: left; border-bottom: 1px solid #e2e8f0; }
-.orders-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-.price-tag { font-weight: 700; color: #ea580c; }
-.admin-footer { text-align: center; padding: 20px 0; font-size: 13px; color: #94a3b8; border-top: 1px solid #f1f5f9; background: #ffffff; }
+/* LAYOUT BASE */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #0f0f0f;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* SIDEBAR KIRI */
+.sidebar {
+  width: 250px;
+  background-color: #18181b;
+  border-right: 1px solid #27272a;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #27272a;
+}
+
+.brand-mark {
+  background: #ea580c;
+  color: #ffffff;
+  font-weight: 800;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+}
+
+.brand-text {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.sidebar-menu {
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-category {
+  font-size: 10px;
+  font-weight: 700;
+  color: #71717a;
+  padding: 12px 12px 4px 12px;
+  letter-spacing: 0.5px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: #a1a1aa;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.menu-item:hover, .menu-item.router-link-active {
+  background-color: #27272a;
+  color: #ffffff;
+}
+
+.menu-item.router-link-active.active,
+.menu-item.active {
+  background-color: #ea580c;
+  color: #ffffff;
+}
+
+.menu-item.logout {
+  color: #ef4444;
+}
+
+/* MAIN WRAPPER */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* TOPBAR */
+.topbar {
+  height: 64px;
+  background-color: #18181b;
+  border-bottom: 1px solid #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #27272a;
+  padding: 8px 14px;
+  border-radius: 8px;
+  width: 300px;
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 13px;
+  width: 100%;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #ea580c;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+/* CONTENT BODY */
+.content-body {
+  padding: 0 28px 28px 28px;
+}
+
+/* DASHBOARD BANNER BAR */
+.dashboard-banner {
+  background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
+  border: 1px solid #3f3f46;
+  border-radius: 12px;
+  padding: 28px;
+  margin-top: 24px;
+}
+
+.banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.banner-content h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.banner-sub {
+  color: #a1a1aa;
+  font-size: 13px;
+  margin: 6px 0 0 0;
+}
+
+/* TABLE CARD */
+.table-card {
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #27272a;
+}
+
+.table-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+th {
+  background-color: #27272a;
+  color: #a1a1aa;
+  padding: 14px 24px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #27272a;
+  color: #d4d4d8;
+}
+
+.font-bold {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.price-tag {
+  font-weight: 700;
+  color: #ea580c;
+}
+
+.qty-badge {
+  background-color: #27272a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #e4e4e7;
+}
 </style>

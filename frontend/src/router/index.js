@@ -76,7 +76,8 @@ const routes = [
         component: OrderAdminView
       },
       {
-        path: 'order-items',
+        path: 'order-item', // Path disesuaikan tanpa 's'
+        alias: 'order-items', // Alias agar '/admin/order-items' tetap bisa diakses
         name: 'admin-order-items',
         component: OrderItemsAdminView
       }
@@ -94,21 +95,17 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true'
   const isAdmin = localStorage.getItem('userRole') === 'admin'
 
-  // Periksa apakah rute tujuan (atau parent-nya) membutuhkan Auth/Admin
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
 
-  // 1. Membutuhkan Auth tapi belum login
   if (requiresAuth && !isAuthenticated) {
     return next({ name: 'login' })
   }
 
-  // 2. Membutuhkan hak akses Admin tapi bukan admin
   if (requiresAdmin && !isAdmin) {
     return next({ name: 'home' })
   }
 
-  // 3. Sudah login tapi mencoba ke halaman login/register
   if ((to.name === 'login' || to.name === 'register') && isAuthenticated) {
     return next({ name: 'home' })
   }
