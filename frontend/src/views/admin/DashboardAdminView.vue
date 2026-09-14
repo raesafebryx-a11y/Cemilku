@@ -4,21 +4,18 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+// Logo Path & Fallback
+const logoCemilku = ref('/images/cemilku-logo.png')
+
+const handleLogoError = (e) => {
+  e.target.src = 'https://cdn-icons-png.flaticon.com/512/2553/2553691.png'
+}
+
 // Data Ringkasan Stat
-const stats = ref([
-  { id: 1, label: 'Total Produk', value: '18', sub: '2 Kategori', icon: '📦' },
-  { id: 2, label: 'Pesanan Masuk', value: '132', sub: '28 Selesai', icon: '🛒' },
-  { id: 3, label: 'Pelanggan', value: '45', sub: '12 Aktif', icon: '👥' },
-  { id: 4, label: 'Konversi WA', value: '86%', sub: '↑ 5% minggu ini', icon: '💬' }
-])
+const stats = ref([])
 
 // Data Tabel Produk Sample
-const products = ref([
-  { id: 1, name: 'Basreng Pedas Jeruk', category: 'Basreng', price: 'Rp 15.000', stock: 45, status: 'Tersedia' },
-  { id: 2, name: 'Keripik Singkong Balado', category: 'Keripik', price: 'Rp 12.000', stock: 12, status: 'Stok Menipis' },
-  { id: 3, name: 'Makaroni Pedas Bawang', category: 'Makaroni', price: 'Rp 10.000', stock: 80, status: 'Tersedia' },
-  { id: 4, name: 'Seblak Kering Bantat', category: 'Keripik', price: 'Rp 12.000', stock: 0, status: 'Habis' }
-])
+const products = ref([])
 
 const handleLogout = () => {
   localStorage.clear()
@@ -30,9 +27,20 @@ const handleLogout = () => {
   <div class="dashboard-layout">
     <!-- SIDEBAR KIRI -->
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-mark">C</div>
-        <span class="brand-text">Cemilku UI</span>
+      <div class="sidebar-brand" @click="router.push('/')">
+        <div class="brand-mark">
+          <img
+            :src="logoCemilku"
+            alt="Logo Cemilku"
+            class="cemilku-logo-img"
+            draggable="false"
+            @error="handleLogoError"
+          />
+        </div>
+        <div class="brand-info">
+          <span class="brand-text">Cemilku</span>
+          <small>SNACK STORE</small>
+        </div>
       </div>
 
       <nav class="sidebar-menu">
@@ -90,12 +98,14 @@ const handleLogout = () => {
         <div class="dashboard-banner">
           <div class="banner-content">
             <h1>Dashboard Overview</h1>
-            <button class="btn-primary-action">+ Tambah Produk</button>
+            <button class="btn-primary-action">
+              <span class="btn-icon">+</span> Tambah Produk
+            </button>
           </div>
         </div>
 
         <!-- STAT CARDS -->
-        <div class="stats-grid">
+        <div class="stats-grid" v-if="stats.length">
           <div v-for="stat in stats" :key="stat.id" class="stat-card">
             <div class="stat-header">
               <span class="stat-label">{{ stat.label }}</span>
@@ -107,7 +117,7 @@ const handleLogout = () => {
         </div>
 
         <!-- TABLE SECTION -->
-        <div class="table-card">
+        <div class="table-card" v-if="products.length">
           <div class="table-header">
             <h3>Daftar Produk Cemilku</h3>
           </div>
@@ -145,6 +155,10 @@ const handleLogout = () => {
             </table>
           </div>
         </div>
+
+        <div v-else class="empty-state">
+          <p>Belum ada data</p>
+        </div>
       </main>
     </div>
   </div>
@@ -176,22 +190,54 @@ const handleLogout = () => {
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid #27272a;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-brand:hover {
+  opacity: 0.9;
 }
 
 .brand-mark {
-  background: #ea580c;
-  color: #ffffff;
-  font-weight: 800;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 3px;
+  flex-shrink: 0;
+}
+
+.cemilku-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .brand-text {
-  font-weight: 700;
-  font-size: 18px;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+}
+
+.brand-info small {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: #a1a1aa;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .sidebar-menu {
@@ -326,19 +372,42 @@ const handleLogout = () => {
   margin: 0;
 }
 
+/* ANIMATED BUTTON PRIMARY ACTION */
 .btn-primary-action {
-  background-color: #ea580c;
+  background: linear-gradient(135deg, #fb923c, #ea580c);
   color: #ffffff;
   border: none;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-icon {
+  display: inline-block;
+  font-size: 16px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-primary-action:hover {
-  background-color: #c2410c;
+  background: linear-gradient(135deg, #f97316, #c2410c);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45);
+}
+
+.btn-primary-action:hover .btn-icon {
+  transform: rotate(90deg);
+}
+
+.btn-primary-action:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
 }
 
 /* STAT CARDS */
@@ -463,5 +532,21 @@ td {
 .status-danger {
   background-color: rgba(239, 68, 68, 0.15);
   color: #f87171;
+}
+
+.empty-state {
+  margin-top: 24px;
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  color: #a1a1aa;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>

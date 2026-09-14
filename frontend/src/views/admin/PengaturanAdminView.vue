@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -11,8 +11,51 @@ const handleLogoError = (e) => {
   e.target.src = 'https://cdn-icons-png.flaticon.com/512/2553/2553691.png'
 }
 
-// Data Produk
-const products = ref([])
+// Data Form Pengaturan Toko & Sistem
+const settings = ref({
+  storeName: 'Cemilku Snack Store',
+  whatsappNumber: '6281234567890',
+  adminEmail: 'admin@cemilku.com',
+  address: 'Jl. Camilan Lezat No. 12, Bandung',
+  enableWaOrder: true,
+  autoStockReduction: true
+})
+
+const isSaving = ref(false)
+const saveSuccess = ref(false)
+
+const loadSettings = () => {
+  const saved = localStorage.getItem('cemilkuSettings')
+
+  if (!saved) return
+
+  try {
+    const parsed = JSON.parse(saved)
+    settings.value = { ...settings.value, ...parsed }
+  } catch (error) {
+    console.error('Gagal memuat pengaturan tersimpan:', error)
+  }
+}
+
+const handleSave = () => {
+  isSaving.value = true
+  saveSuccess.value = false
+
+  setTimeout(() => {
+    localStorage.setItem('cemilkuSettings', JSON.stringify(settings.value))
+
+    isSaving.value = false
+    saveSuccess.value = true
+
+    setTimeout(() => {
+      saveSuccess.value = false
+    }, 3000)
+  }, 800)
+}
+
+onMounted(() => {
+  loadSettings()
+})
 
 const handleLogout = () => {
   localStorage.clear()
@@ -47,7 +90,7 @@ const handleLogout = () => {
         </router-link>
 
         <div class="menu-category">KELOLA TOKO</div>
-        <router-link to="/admin/produk" class="menu-item active">
+        <router-link to="/admin/produk" class="menu-item">
           <span class="menu-icon">🍿</span> Produk
         </router-link>
         
@@ -64,7 +107,7 @@ const handleLogout = () => {
         </router-link>
 
         <div class="menu-category">SISTEM</div>
-        <router-link to="/admin/pengaturan" class="menu-item">
+        <router-link to="/admin/pengaturan" class="menu-item active">
           <span class="menu-icon">⚙️</span> Pengaturan
         </router-link>
         
@@ -80,7 +123,7 @@ const handleLogout = () => {
       <header class="topbar">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Cari produk..." />
+          <input type="text" placeholder="Cari di pengaturan..." />
         </div>
 
         <div class="topbar-right">
@@ -95,51 +138,100 @@ const handleLogout = () => {
         <div class="dashboard-banner">
           <div class="banner-content">
             <div>
-              <h1>Kelola Produk</h1>
-              <p class="banner-sub">Tambah, edit, atau hapus produk makanan ringan Cemilku.</p>
+              <h1>Pengaturan Sistem</h1>
+              <p class="banner-sub">Kelola informasi toko, kontak WhatsApp, dan preferensi aplikasi.</p>
             </div>
-            <button class="btn-primary-action" @click="router.push('/admin/produk/tambah')">
-              <span class="btn-icon">+</span> Tambah Produk Baru
+            <button 
+              class="btn-primary-action" 
+              :disabled="isSaving" 
+              @click="handleSave"
+            >
+              <span class="btn-icon">💾</span> 
+              {{ isSaving ? 'Menyimpan...' : 'Simpan Perubahan' }}
             </button>
           </div>
         </div>
 
-        <!-- TABLE CARD -->
-        <div v-if="products.length" class="table-card">
-          <div class="table-header">
-            <h3>Daftar Produk Cemilku</h3>
-          </div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nama Produk</th>
-                  <th>Kategori</th>
-                  <th>Harga</th>
-                  <th>Stok</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in products" :key="item.id">
-                  <td class="font-bold">#{{ item.id }}</td>
-                  <td class="font-bold">{{ item.name }}</td>
-                  <td>{{ item.category }}</td>
-                  <td><span class="price-tag">{{ item.price }}</span></td>
-                  <td>{{ item.stock }} pcs</td>
-                  <td>
-                    <button class="btn-sm btn-edit">Edit</button>
-                    <button class="btn-sm btn-delete">Hapus</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <!-- NOTIFIKASI SUKSES -->
+        <div v-if="saveSuccess" class="alert-success">
+          ✨ Pengaturan berhasil diperbarui!
         </div>
 
-        <div v-else class="empty-state">
-          <p>Belum ada data</p>
+        <!-- SETTINGS FORM CARD -->
+        <div class="form-card">
+          <div class="card-header">
+            <h3>Informasi Toko & Kontak</h3>
+          </div>
+          
+          <form @submit.prevent="handleSave" class="settings-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nama Toko</label>
+                <input 
+                  type="text" 
+                  v-model="settings.storeName" 
+                  placeholder="Masukkan nama toko"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Nomor WhatsApp Admin (Format 62)</label>
+                <input 
+                  type="text" 
+                  v-model="settings.whatsappNumber" 
+                  placeholder="628xxxxxxxxxx"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Email Admin</label>
+                <input 
+                  type="email" 
+                  v-model="settings.adminEmail" 
+                  placeholder="admin@cemilku.com"
+                />
+              </div>
+
+              <div class="form-group full-width">
+                <label>Alamat Toko</label>
+                <textarea 
+                  rows="3" 
+                  v-model="settings.address" 
+                  placeholder="Alamat lengkap toko"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="card-header border-none padding-zero">
+              <h3>Preferensi Pesanan</h3>
+            </div>
+
+            <div class="toggle-group">
+              <div class="toggle-item">
+                <div class="toggle-info">
+                  <span class="toggle-title">Integrasi Order WhatsApp</span>
+                  <span class="toggle-desc">Arahkan checkout pelanggan langsung ke aplikasi WhatsApp Admin.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" v-model="settings.enableWaOrder" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-item">
+                <div class="toggle-info">
+                  <span class="toggle-title">Pengurangan Stok Otomatis</span>
+                  <span class="toggle-desc">Kurangi stok produk secara otomatis saat pesanan dibuat.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" v-model="settings.autoStockReduction" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </form>
         </div>
       </main>
     </div>
@@ -388,121 +480,199 @@ const handleLogout = () => {
 
 .btn-icon {
   display: inline-block;
-  font-size: 16px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 15px;
 }
 
-.btn-primary-action:hover {
+.btn-primary-action:hover:not(:disabled) {
   background: linear-gradient(135deg, #f97316, #c2410c);
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45);
 }
 
-.btn-primary-action:hover .btn-icon {
-  transform: rotate(90deg);
+.btn-primary-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.btn-primary-action:active {
-  transform: translateY(-1px) scale(0.98);
-  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+/* NOTIFIKASI */
+.alert-success {
+  margin-top: 16px;
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-/* TABLE CARD */
-.table-card {
+/* FORM CARD */
+.form-card {
   background-color: #18181b;
   border: 1px solid #27272a;
   border-radius: 12px;
   margin-top: 24px;
-  overflow: hidden;
+  padding: 24px;
 }
 
-.table-header {
-  padding: 20px 24px;
+.card-header {
   border-bottom: 1px solid #27272a;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
 }
 
-.table-header h3 {
+.card-header.border-none {
+  border-bottom: none;
+}
+
+.card-header.padding-zero {
+  padding-bottom: 0;
+}
+
+.card-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
 }
 
-.table-responsive {
-  overflow-x: auto;
+.settings-form {
+  display: flex;
+  flex-direction: column;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 14px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
-th {
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a1a1aa;
+}
+
+.form-group input,
+.form-group textarea {
   background-color: #27272a;
-  color: #a1a1aa;
-  padding: 14px 24px;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-td {
-  padding: 16px 24px;
-  border-bottom: 1px solid #27272a;
-  color: #d4d4d8;
-}
-
-.font-bold {
-  font-weight: 600;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  padding: 10px 14px;
   color: #ffffff;
-}
-
-.price-tag {
-  font-weight: 700;
-  color: #ea580c;
-}
-
-/* BUTTON ACTION SIZES */
-.btn-sm {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  margin-right: 6px;
-  transition: opacity 0.2s, transform 0.1s;
-}
-
-.btn-sm:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
-}
-
-.btn-edit {
-  background-color: #0284c7;
-  color: #ffffff;
-}
-
-.btn-delete {
-  background-color: #dc2626;
-  color: #ffffff;
-}
-
-.empty-state {
-  margin-top: 24px;
-  background-color: #18181b;
-  border: 1px solid #27272a;
-  border-radius: 12px;
-  padding: 30px 20px;
-  text-align: center;
-  color: #a1a1aa;
-}
-
-.empty-state p {
-  margin: 0;
   font-size: 14px;
-  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #ea580c;
+}
+
+.divider {
+  height: 1px;
+  background-color: #27272a;
+  margin: 28px 0;
+}
+
+/* TOGGLE SWITCHES */
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #27272a;
+  padding: 16px 20px;
+  border-radius: 8px;
+  border: 1px solid #3f3f46;
+}
+
+.toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.toggle-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.toggle-desc {
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+/* SWITCH UI */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #3f3f46;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #ea580c;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-group.full-width {
+    grid-column: span 1;
+  }
 }
 </style>

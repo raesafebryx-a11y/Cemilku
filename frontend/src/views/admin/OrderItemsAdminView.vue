@@ -4,12 +4,15 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// Data Sample Order Items
-const orderItems = ref([
-  { id: 101, orderId: 'ORD-001', productName: 'Keripik Kaca', qty: 2, subtotal: 'Rp 24.000' },
-  { id: 102, orderId: 'ORD-001', productName: 'Basreng Pedas Jeruk', qty: 1, subtotal: 'Rp 15.000' },
-  { id: 103, orderId: 'ORD-002', productName: 'Makaroni Level 5', qty: 3, subtotal: 'Rp 30.000' }
-])
+// Logo Path & Fallback
+const logoCemilku = ref('/images/cemilku-logo.png')
+
+const handleLogoError = (e) => {
+  e.target.src = 'https://cdn-icons-png.flaticon.com/512/2553/2553691.png'
+}
+
+// Data Order Items
+const orderItems = ref([])
 
 const handleLogout = () => {
   localStorage.clear()
@@ -21,9 +24,20 @@ const handleLogout = () => {
   <div class="dashboard-layout">
     <!-- SIDEBAR KIRI -->
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-mark">C</div>
-        <span class="brand-text">Cemilku UI</span>
+      <div class="sidebar-brand" @click="router.push('/')">
+        <div class="brand-mark">
+          <img
+            :src="logoCemilku"
+            alt="Logo Cemilku"
+            class="cemilku-logo-img"
+            draggable="false"
+            @error="handleLogoError"
+          />
+        </div>
+        <div class="brand-info">
+          <span class="brand-text">Cemilku</span>
+          <small>SNACK STORE</small>
+        </div>
       </div>
 
       <nav class="sidebar-menu">
@@ -88,7 +102,7 @@ const handleLogout = () => {
         </div>
 
         <!-- TABLE CARD -->
-        <div class="table-card">
+        <div v-if="orderItems.length" class="table-card">
           <div class="table-header">
             <h3>Rincian Produk Dipesan</h3>
           </div>
@@ -115,12 +129,25 @@ const handleLogout = () => {
             </table>
           </div>
         </div>
+
+        <div v-else class="empty-state">
+          <p>Belum ada data</p>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* SEMBUNYIKAN FLOATING BUTTON WA APABILA DIPANGGIL GLOBAL */
+:deep(.whatsapp-float),
+:deep(.wa-float),
+:deep(.floating-wa),
+:deep(a[href*="wa.me"]),
+:deep(a[href*="whatsapp.com"]) {
+  display: none !important;
+}
+
 /* LAYOUT BASE */
 .dashboard-layout {
   display: flex;
@@ -128,6 +155,7 @@ const handleLogout = () => {
   background-color: #0f0f0f;
   color: #ffffff;
   font-family: system-ui, -apple-system, sans-serif;
+  position: relative;
 }
 
 /* SIDEBAR KIRI */
@@ -146,22 +174,54 @@ const handleLogout = () => {
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid #27272a;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-brand:hover {
+  opacity: 0.9;
 }
 
 .brand-mark {
-  background: #ea580c;
-  color: #ffffff;
-  font-weight: 800;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 3px;
+  flex-shrink: 0;
+}
+
+.cemilku-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .brand-text {
-  font-weight: 700;
-  font-size: 18px;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+}
+
+.brand-info small {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: #a1a1aa;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .sidebar-menu {
@@ -363,5 +423,21 @@ td {
   border-radius: 6px;
   font-size: 13px;
   color: #e4e4e7;
+}
+
+.empty-state {
+  margin-top: 24px;
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  color: #a1a1aa;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>

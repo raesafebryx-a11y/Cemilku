@@ -4,12 +4,15 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-// Data Kategori Sample
-const categories = ref([
-  { id: 1, name: 'Camilan Pedas', count: 12 },
-  { id: 2, name: 'Keripik', count: 8 },
-  { id: 3, name: 'Olahan Tepung', count: 4 }
-])
+// Logo Path & Fallback
+const logoCemilku = ref('/images/cemilku-logo.png')
+
+const handleLogoError = (e) => {
+  e.target.src = 'https://cdn-icons-png.flaticon.com/512/2553/2553691.png'
+}
+
+// Data Kategori
+const categories = ref([])
 
 const handleLogout = () => {
   localStorage.clear()
@@ -21,9 +24,20 @@ const handleLogout = () => {
   <div class="dashboard-layout">
     <!-- SIDEBAR KIRI -->
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-mark">C</div>
-        <span class="brand-text">Cemilku UI</span>
+      <div class="sidebar-brand" @click="router.push('/')">
+        <div class="brand-mark">
+          <img
+            :src="logoCemilku"
+            alt="Logo Cemilku"
+            class="cemilku-logo-img"
+            draggable="false"
+            @error="handleLogoError"
+          />
+        </div>
+        <div class="brand-info">
+          <span class="brand-text">Cemilku</span>
+          <small>SNACK STORE</small>
+        </div>
       </div>
 
       <nav class="sidebar-menu">
@@ -84,12 +98,14 @@ const handleLogout = () => {
               <h1>Kelola Kategori</h1>
               <p class="banner-sub">Atur kategori menu untuk mempermudah pencarian produk.</p>
             </div>
-            <button class="btn-primary-action">+ Tambah Kategori</button>
+            <button class="btn-primary-action">
+              <span class="btn-icon">+</span> Tambah Kategori
+            </button>
           </div>
         </div>
 
         <!-- TABLE CARD -->
-        <div class="table-card">
+        <div v-if="categories.length" class="table-card">
           <div class="table-header">
             <h3>Daftar Kategori Produk</h3>
           </div>
@@ -106,7 +122,7 @@ const handleLogout = () => {
               <tbody>
                 <tr v-for="cat in categories" :key="cat.id">
                   <td class="font-bold">#{{ cat.id }}</td>
-                  <td>{{ cat.name }}</td>
+                  <td class="font-bold">{{ cat.name }}</td>
                   <td>{{ cat.count }} Produk</td>
                   <td>
                     <button class="btn-sm btn-edit">Edit</button>
@@ -117,12 +133,25 @@ const handleLogout = () => {
             </table>
           </div>
         </div>
+
+        <div v-else class="empty-state">
+          <p>Belum ada data</p>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* SEMBUNYIKAN FLOATING BUTTON WA APABILA DIPANGGIL GLOBAL */
+:deep(.whatsapp-float),
+:deep(.wa-float),
+:deep(.floating-wa),
+:deep(a[href*="wa.me"]),
+:deep(a[href*="whatsapp.com"]) {
+  display: none !important;
+}
+
 /* LAYOUT BASE */
 .dashboard-layout {
   display: flex;
@@ -130,6 +159,7 @@ const handleLogout = () => {
   background-color: #0f0f0f;
   color: #ffffff;
   font-family: system-ui, -apple-system, sans-serif;
+  position: relative;
 }
 
 /* SIDEBAR KIRI */
@@ -148,22 +178,54 @@ const handleLogout = () => {
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid #27272a;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-brand:hover {
+  opacity: 0.9;
 }
 
 .brand-mark {
-  background: #ea580c;
-  color: #ffffff;
-  font-weight: 800;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fb923c, #ea580c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 3px;
+  flex-shrink: 0;
+}
+
+.cemilku-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .brand-text {
-  font-weight: 700;
-  font-size: 18px;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+}
+
+.brand-info small {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: #a1a1aa;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .sidebar-menu {
@@ -303,19 +365,42 @@ const handleLogout = () => {
   margin: 6px 0 0 0;
 }
 
+/* ANIMATED BUTTON PRIMARY ACTION */
 .btn-primary-action {
-  background-color: #ea580c;
+  background: linear-gradient(135deg, #fb923c, #ea580c);
   color: #ffffff;
   border: none;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-icon {
+  display: inline-block;
+  font-size: 16px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-primary-action:hover {
-  background-color: #c2410c;
+  background: linear-gradient(135deg, #f97316, #c2410c);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45);
+}
+
+.btn-primary-action:hover .btn-icon {
+  transform: rotate(90deg);
+}
+
+.btn-primary-action:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
 }
 
 /* TABLE CARD */
@@ -378,11 +463,12 @@ td {
   border: none;
   cursor: pointer;
   margin-right: 6px;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.1s;
 }
 
 .btn-sm:hover {
   opacity: 0.85;
+  transform: translateY(-1px);
 }
 
 .btn-edit {
@@ -393,5 +479,21 @@ td {
 .btn-delete {
   background-color: #dc2626;
   color: #ffffff;
+}
+
+.empty-state {
+  margin-top: 24px;
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  color: #a1a1aa;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>

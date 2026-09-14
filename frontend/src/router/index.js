@@ -10,9 +10,11 @@ import KontakView from '../views/KontakView.vue'
 // Import View Admin dari folder admin/
 import DashboardAdminView from '../views/admin/DashboardAdminView.vue'
 import ProdukAdminView from '../views/admin/ProdukAdminView.vue'
+import TambahProdukView from '../views/admin/TambahProdukView.vue'
 import KategoriAdminView from '../views/admin/KategoriAdminView.vue'
 import OrderAdminView from '../views/admin/OrderAdminView.vue'
 import OrderItemsAdminView from '../views/admin/OrderItemsAdminView.vue'
+import PengaturanAdminView from '../views/admin/PengaturanAdminView.vue'
 
 const routes = [
   {
@@ -66,6 +68,11 @@ const routes = [
         component: ProdukAdminView
       },
       {
+        path: 'produk/tambah', // Rute untuk halaman tambah produk baru
+        name: 'admin-tambah-produk',
+        component: TambahProdukView
+      },
+      {
         path: 'kategori',
         name: 'admin-kategori',
         component: KategoriAdminView
@@ -80,6 +87,11 @@ const routes = [
         alias: 'order-items', // Alias agar '/admin/order-items' tetap bisa diakses
         name: 'admin-order-items',
         component: OrderItemsAdminView
+      },
+      {
+        path: 'pengaturan',
+        name: 'admin-pengaturan',
+        component: PengaturanAdminView
       }
     ]
   }
