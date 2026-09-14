@@ -1,7 +1,13 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+// Layout utama aplikasi Cemilku
 </script>
 
 <template>
-  <HelloWorld />
+  <main>
+    <router-view />
+  </main>
 </template>
+
+<style scoped>
+/* Style global untuk App.vue jika diperlukan */
+</style>
