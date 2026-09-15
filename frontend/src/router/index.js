@@ -6,12 +6,14 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import TentangkamiView from '../views/TentangkamiView.vue'
 import KontakView from '../views/KontakView.vue'
+import ProfileView from '../views/ProfileView.vue'
 
 // Import View Admin dari folder admin/
 import DashboardAdminView from '../views/admin/DashboardAdminView.vue'
 import ProdukAdminView from '../views/admin/ProdukAdminView.vue'
 import TambahProdukView from '../views/admin/TambahProdukView.vue'
 import KategoriAdminView from '../views/admin/KategoriAdminView.vue'
+import TambahKategoriView from '../views/admin/TambahKategoriView.vue'
 import OrderAdminView from '../views/admin/OrderAdminView.vue'
 import OrderItemsAdminView from '../views/admin/OrderItemsAdminView.vue'
 import PengaturanAdminView from '../views/admin/PengaturanAdminView.vue'
@@ -31,6 +33,12 @@ const routes = [
     path: '/',
     name: 'home',
     component: HomeView
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    component: ProfileView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/detail/:id?',
@@ -78,6 +86,11 @@ const routes = [
         component: KategoriAdminView
       },
       {
+        path: 'kategori/tambah', // Rute untuk halaman tambah kategori baru
+        name: 'admin-tambah-kategori',
+        component: TambahKategoriView
+      },
+      {
         path: 'order',
         name: 'admin-order',
         component: OrderAdminView
@@ -105,19 +118,23 @@ const router = createRouter({
 // Navigation Guard
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true'
-  const isAdmin = localStorage.getItem('userRole') === 'admin'
+  const userRole = localStorage.getItem('userRole') || localStorage.getItem('role') || ''
+  const isAdmin = userRole === 'admin'
 
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
 
+  // Proteksi akses butuh autentikasi
   if (requiresAuth && !isAuthenticated) {
     return next({ name: 'login' })
   }
 
+  // Proteksi akses halaman admin
   if (requiresAdmin && !isAdmin) {
     return next({ name: 'home' })
   }
 
+  // Pengguna yang sudah login dilarang balik ke halaman login/register
   if ((to.name === 'login' || to.name === 'register') && isAuthenticated) {
     return next({ name: 'home' })
   }

@@ -1,280 +1,284 @@
+```vue
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 
-const snack = ref(null)
+// Dark Mode
+const isDarkMode = ref(localStorage.getItem('theme') === 'dark')
 
-// Data produk
-const snacksData = [
+// Data Produk (sementara)
+// Nantinya bisa diganti dengan API atau localStorage
+const products = ref([
   {
     id: 1,
-    name: 'Basreng Pedas Jeruk',
-    category: 'Basreng',
-    tag: 'Best Seller 🔥',
-    tagClass: 'tag-rose',
-    spicyLevel: '🌶️🌶️🌶️',
+    name: 'Keripik Singkong Pedas',
+    category: 'Pedas',
     price: 15000,
-    desc: 'Baso goreng renyah disiram bumbu cabai asli dan racikan daun jeruk segar khas Bandung.'
+    stock: 25,
+    image: 'https://via.placeholder.com/600x400',
+    description:
+      'Keripik singkong renyah dengan bumbu pedas khas nusantara yang menggugah selera.'
   },
   {
     id: 2,
-    name: 'Keripik Singkong Balado',
-    category: 'Keripik',
-    tag: 'Favorit 🧡',
-    tagClass: 'tag-amber',
-    spicyLevel: '🌶️🌶️',
+    name: 'Jagung Bakar Gurih',
+    category: 'Gurih',
     price: 12000,
-    desc: 'Irisan singkong super tipis bertabur bumbu balado manis pedas gurih renyah.'
+    stock: 30,
+    image: 'https://via.placeholder.com/600x400',
+    description:
+      'Camilan jagung bakar dengan rasa gurih dan aroma yang menggoda.'
   },
   {
     id: 3,
-    name: 'Makaroni Pedas Bawang',
-    category: 'Makaroni',
-    tag: 'Kriuk Banget ✨',
-    tagClass: 'tag-emerald',
-    spicyLevel: '🌶️🌶️🌶️',
-    price: 10000,
-    desc: 'Makaroni renyah kriuk dengan balutan cabai kering dan aroma bawang gurih memikat.'
-  },
-  {
-    id: 4,
-    name: 'Seblak Kering Bantat',
-    category: 'Keripik',
-    tag: 'Super Pedas 🌶️',
-    tagClass: 'tag-red',
-    spicyLevel: '🌶️🌶️🌶️🌶️',
-    price: 12000,
-    desc: 'Kerupuk seblak pedas rempah kencur pilihan, cocok buat kamu pencinta tantangan pedas.'
-  },
-  {
-    id: 5,
-    name: 'Keripik Tempe Rempah',
-    category: 'Keripik',
-    tag: 'Gurih Alami 🌿',
-    tagClass: 'tag-teal',
-    spicyLevel: '🌶️',
-    price: 14000,
-    desc: 'Tempe pilihan digoreng renyah dengan adonan tepung bumbu rempah tradisional.'
-  },
-  {
-    id: 6,
-    name: 'Kue Kacang Lumer',
-    category: 'Kue',
-    tag: 'Manis Legit 🍪',
-    tagClass: 'tag-orange',
-    spicyLevel: 'Manis Gurih',
+    name: 'Coklat Crispy',
+    category: 'Manis',
     price: 18000,
-    desc: 'Kue kacang renyah manis yang meleleh lembut di mulut begitu digigit.'
+    stock: 15,
+    image: 'https://via.placeholder.com/600x400',
+    description:
+      'Perpaduan coklat premium dan tekstur crispy yang manis dan lezat.'
   }
-]
+])
 
-onMounted(() => {
-  const snackId = parseInt(route.params.id) || 1
-
-  snack.value =
-    snacksData.find(item => item.id === snackId) ||
-    snacksData[0]
+const product = computed(() => {
+  return products.value.find(
+    (item) => item.id === Number(route.params.id)
+  )
 })
 
 const goBack = () => {
   router.push('/')
 }
-
-const formatRupiah = (val) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
-  }).format(val)
-}
 </script>
 
-
 <template>
-  <div class="detail-page-wrapper">
+  <div class="detail-wrapper" :class="{ 'dark-mode': isDarkMode }">
 
-    <!-- =========================================
-         NAVBAR
-    ========================================== -->
-    <header class="detail-navbar">
+    <div v-if="product" class="container">
 
-      <div class="detail-container detail-nav-content">
+      <button class="btn-back" @click="goBack">
+        ← Kembali
+      </button>
 
-        <button
-          @click="goBack"
-          class="detail-back-button"
-        >
-          <span class="detail-back-icon">←</span>
-          <span>Kembali ke Menu</span>
-        </button>
+      <div class="detail-card">
 
-
-        <div
-          class="detail-brand"
-          @click="router.push('/')"
-        >
-          <span class="detail-brand-icon">🍿</span>
-
-          <span class="detail-brand-name">
-            Cemilku
-          </span>
+        <div class="image-section">
+          <img :src="product.image" :alt="product.name" />
         </div>
 
-      </div>
+        <div class="info-section">
 
-    </header>
-
-
-    <!-- =========================================
-         DETAIL CONTENT
-    ========================================== -->
-    <main
-      class="detail-container detail-content-section"
-      v-if="snack"
-    >
-
-      <article class="detail-card-large">
-
-        <!-- HEADER -->
-        <div class="detail-header">
-
-          <span
-            :class="[
-              'detail-tag-badge',
-              snack.tagClass
-            ]"
-          >
-            {{ snack.tag }}
+          <span class="category-badge">
+            {{ product.category }}
           </span>
 
+          <h1>{{ product.name }}</h1>
 
-          <div class="detail-spicy-box">
-
-            <span class="detail-spicy-label">
-              Tingkat Pedas
-            </span>
-
-            <span class="detail-spicy-value">
-              {{ snack.spicyLevel }}
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- TITLE -->
-        <h1 class="detail-title">
-          {{ snack.name }}
-        </h1>
-
-
-        <!-- CATEGORY -->
-        <p class="detail-category">
-          Kategori
-          <span class="detail-category-separator">•</span>
-          <strong>{{ snack.category }}</strong>
-        </p>
-
-
-        <!-- DIVIDER -->
-        <div class="detail-divider"></div>
-
-
-        <!-- DESCRIPTION -->
-        <section class="detail-description-section">
-
-          <p class="detail-section-label">
-            DESKRIPSI PRODUK
+          <p class="description">
+            {{ product.description }}
           </p>
 
-          <h2 class="detail-description-title">
-            Tentang Produk
-          </h2>
+          <div class="info-grid">
 
-          <p class="detail-desc">
-            {{ snack.desc }}
-          </p>
+            <div class="info-box">
+              <span>Harga</span>
+              <strong>
+                Rp {{ product.price.toLocaleString('id-ID') }}
+              </strong>
+            </div>
 
-        </section>
-
-
-        <!-- INFO -->
-        <div class="detail-info-grid">
-
-          <div class="detail-info-item">
-
-            <span class="detail-info-label">
-              KATEGORI
-            </span>
-
-            <span class="detail-info-value">
-              {{ snack.category }}
-            </span>
+            <div class="info-box">
+              <span>Stok</span>
+              <strong>
+                {{ product.stock }}
+              </strong>
+            </div>
 
           </div>
 
-
-          <div class="detail-info-item">
-
-            <span class="detail-info-label">
-              LEVEL
-            </span>
-
-            <span class="detail-info-value">
-              {{ snack.spicyLevel }}
-            </span>
-
-          </div>
-
-
-          <div class="detail-info-item">
-
-            <span class="detail-info-label">
-              STATUS
-            </span>
-
-            <span class="detail-status">
-              Tersedia
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <!-- FOOTER -->
-        <div class="detail-footer">
-
-          <div class="detail-price-container">
-
-            <span class="detail-price-label">
-              Harga Satuan
-            </span>
-
-            <span class="detail-price">
-              {{ formatRupiah(snack.price) }}
-            </span>
-
-          </div>
-
-
-          <button
-            @click="goBack"
-            class="detail-primary-button"
-          >
-            <span>Kembali & Pesan di Beranda</span>
-            <span class="detail-button-arrow">→</span>
+          <button class="btn-buy">
+            🛒 Tambah ke Keranjang
           </button>
 
         </div>
 
-      </article>
+      </div>
 
-    </main>
+    </div>
+
+    <div v-else class="not-found">
+
+      <div class="not-found-card">
+        <h2>Produk Tidak Ditemukan</h2>
+        <p>
+          Produk yang Anda cari tidak tersedia.
+        </p>
+
+        <button class="btn-back" @click="goBack">
+          Kembali ke Beranda
+        </button>
+      </div>
+
+    </div>
 
   </div>
 </template>
+
+<style scoped>
+.detail-wrapper {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 40px 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.btn-back {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+.detail-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  background: white;
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+}
+
+.image-section img {
+  width: 100%;
+  border-radius: 18px;
+  object-fit: cover;
+}
+
+.info-section h1 {
+  margin: 16px 0;
+  font-size: 2rem;
+  color: #0f172a;
+}
+
+.description {
+  color: #64748b;
+  line-height: 1.8;
+}
+
+.category-badge {
+  display: inline-block;
+  background: #dbeafe;
+  color: #2563eb;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.info-grid {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.info-box {
+  flex: 1;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+}
+
+.info-box span {
+  display: block;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.info-box strong {
+  font-size: 1.2rem;
+  color: #0f172a;
+}
+
+.btn-buy {
+  margin-top: 24px;
+  width: 100%;
+  border: none;
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #3b82f6
+  );
+  color: white;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.not-found {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+.not-found-card {
+  background: white;
+  padding: 40px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* DARK MODE */
+.dark-mode {
+  background: #0f172a;
+}
+
+.dark-mode .detail-card,
+.dark-mode .not-found-card {
+  background: #1e293b;
+}
+
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode strong {
+  color: #f8fafc !important;
+}
+
+.dark-mode .description,
+.dark-mode .info-box span {
+  color: #94a3b8;
+}
+
+.dark-mode .info-box {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .detail-card {
+    grid-template-columns: 1fr;
+  }
+
+  .info-grid {
+    flex-direction: column;
+  }
+}
+</style>
+```

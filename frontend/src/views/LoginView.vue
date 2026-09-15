@@ -21,15 +21,15 @@ const handleLogin = () => {
 
   if (!loginUsername.value || !loginPassword.value) {
     errorMessage.value = 'Username dan password wajib diisi.'
-    
-    // Notifikasi Peringatan Input Kosong
+
     Swal.fire({
       icon: 'warning',
       title: 'Data Belum Lengkap',
       text: 'Harap isi username dan password Anda terlebih dahulu.',
-      confirmButtonColor: '#ea580c',
-      background: '#1e293b',
-      color: '#fff'
+      confirmButtonColor: '#2563eb',
+      cancelButtonColor: '#94a3b8',
+      background: '#ffffff',
+      color: '#1e293b'
     })
     return
   }
@@ -53,9 +53,9 @@ const handleLogin = () => {
     timer: 1800,
     showConfirmButton: false,
     timerProgressBar: true,
-    confirmButtonColor: '#ea580c',
-    background: '#1e293b',
-    color: '#fff'
+    confirmButtonColor: '#2563eb',
+    background: '#ffffff',
+    color: '#1e293b'
   }).then(() => {
     router.push('/')
   })
@@ -82,11 +82,10 @@ const fillDemoAdmin = () => {
     timer: 1800,
     showConfirmButton: false,
     timerProgressBar: true,
-    confirmButtonColor: '#ea580c',
-    background: '#1e293b',
-    color: '#fff'
+    confirmButtonColor: '#2563eb',
+    background: '#ffffff',
+    color: '#1e293b'
   }).then(() => {
-    // 3. Otomatis redirect ke halaman Home
     router.push('/')
   })
 }
@@ -238,8 +237,8 @@ const fillDemoAdmin = () => {
 <style scoped>
 .auth-wrapper {
   min-height: 100vh;
-  background: #0f1219;
-  color: #f8fafc;
+  background-color: #f6f8fb;
+  color: #1e293b;
   position: relative;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   display: flex;
@@ -255,27 +254,40 @@ const fillDemoAdmin = () => {
   box-sizing: border-box;
 }
 
-/* BACKGROUND GLOW EFFECT */
-.hero-bg-glow {
+.auth-wrapper::before,
+.auth-wrapper::after {
+  content: '';
   position: absolute;
-  top: -10%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 650px;
-  height: 450px;
-  background: radial-gradient(circle, rgba(255, 126, 95, 0.15) 0%, rgba(15, 18, 25, 0) 70%);
-  filter: blur(90px);
+  border-radius: 50%;
+  filter: blur(140px);
   pointer-events: none;
+  z-index: 0;
 }
 
-/* NAVBAR GLASSMORPHISM */
+.auth-wrapper::before {
+  width: 520px;
+  height: 520px;
+  top: -120px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(147, 197, 253, 0.45) 0%, rgba(191, 219, 254, 0.15) 70%);
+}
+
+.auth-wrapper::after {
+  width: 480px;
+  height: 480px;
+  left: -100px;
+  bottom: 150px;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.3) 0%, rgba(224, 242, 254, 0.1) 70%);
+}
+
 .navbar {
   position: sticky;
   top: 0;
   z-index: 50;
   backdrop-filter: blur(16px);
-  background: rgba(15, 18, 25, 0.82);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.75);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .nav-content {
@@ -283,7 +295,9 @@ const fillDemoAdmin = () => {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  height: 82px;
+  height: 76px;
+  position: relative;
+  z-index: 1;
 }
 
 .brand-logo {
@@ -295,20 +309,20 @@ const fillDemoAdmin = () => {
 }
 
 .brand-logo:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .brand-mark {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #ff7e5f, #feb47b);
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 5px;
-  box-shadow: 0 4px 15px rgba(255, 126, 95, 0.3);
+  padding: 6px;
+  box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.3);
 }
 
 .cemilku-logo-img {
@@ -319,30 +333,30 @@ const fillDemoAdmin = () => {
 }
 
 .brand-text {
-  color: #fff;
-  font-size: 1.5rem;
+  color: #0f172a;
+  font-size: 1.35rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   display: block;
 }
 
 .brand-info small {
   display: block;
-  margin-top: 1px;
-  letter-spacing: 0.18em;
+  margin-top: 3px;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
+  color: #2563eb;
   font-size: 0.6rem;
+  font-weight: 800;
 }
 
-/* MAIN LAYOUT */
 .auth-main {
   flex: 1;
   display: flex;
   align-items: center;
   padding: 60px 0;
   position: relative;
-  z-index: 10;
+  z-index: 1;
 }
 
 .auth-container {
@@ -352,42 +366,42 @@ const fillDemoAdmin = () => {
   align-items: center;
 }
 
-/* INTRO SECTION */
 .hero-label {
-  color: #ff7e5f;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.2em;
-  background: rgba(255, 126, 95, 0.1);
-  padding: 6px 14px;
-  border-radius: 30px;
-  border: 1px solid rgba(255, 126, 95, 0.2);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid #bfdbfe;
 }
 
 .hero-title {
   font-size: 3rem;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.15;
   margin: 20px 0 16px;
   letter-spacing: -0.03em;
-  color: #fff;
+  color: #0f172a;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .hero-subtitle {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 1.05rem;
-  line-height: 1.6;
+  line-height: 1.65;
   margin-bottom: 32px;
 }
 
-/* BENEFITS LIST */
 .auth-benefit {
   display: flex;
   flex-direction: column;
@@ -398,22 +412,23 @@ const fillDemoAdmin = () => {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e2e8f0;
   padding: 14px 18px;
   border-radius: 16px;
   transition: all 0.3s ease;
 }
 
 .benefit-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 126, 95, 0.3);
+  background: #ffffff;
+  border-color: #cbd5e1;
   transform: translateX(4px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
 
 .benefit-icon {
-  background: linear-gradient(135deg, rgba(255, 126, 95, 0.2), rgba(254, 180, 123, 0.1));
-  color: #feb47b;
+  background: #eff6ff;
+  color: #2563eb;
   font-weight: 800;
   font-size: 0.85rem;
   width: 42px;
@@ -422,30 +437,29 @@ const fillDemoAdmin = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 126, 95, 0.3);
+  border: 1px solid #bfdbfe;
   flex-shrink: 0;
 }
 
 .benefit-item strong {
   display: block;
   font-size: 0.95rem;
-  color: #fff;
+  color: #0f172a;
   margin-bottom: 2px;
 }
 
 .benefit-item span {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #64748b;
 }
 
-/* CARD SECTION GLASSMORPHISM */
 .auth-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 28px;
   padding: 40px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.07);
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -456,7 +470,7 @@ const fillDemoAdmin = () => {
 }
 
 .card-badge {
-  color: #ff7e5f;
+  color: #2563eb;
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.15em;
@@ -467,16 +481,15 @@ const fillDemoAdmin = () => {
 .auth-card-header h2 {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #fff;
+  color: #0f172a;
   margin-bottom: 6px;
 }
 
 .auth-card-header p {
-  color: #94a3b8;
+  color: #64748b;
   font-size: 0.9rem;
 }
 
-/* FORM CONTROLS */
 .auth-form-group {
   margin-bottom: 20px;
 }
@@ -485,61 +498,61 @@ const fillDemoAdmin = () => {
   display: block;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #cbd5e1;
+  color: #334155;
   margin-bottom: 8px;
 }
 
 .auth-form-group input {
   width: 100%;
   padding: 14px 16px;
-  background: rgba(15, 18, 25, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
   border-radius: 12px;
   font-size: 0.95rem;
-  color: #fff;
+  color: #0f172a;
   box-sizing: border-box;
   outline: none;
   transition: all 0.3s ease;
 }
 
 .auth-form-group input::placeholder {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .auth-form-group input:focus {
-  border-color: #ff7e5f;
-  box-shadow: 0 0 15px rgba(255, 126, 95, 0.25);
-  background: rgba(15, 18, 25, 0.8);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  background: #ffffff;
 }
 
 .auth-error {
-  color: #f87171;
+  color: #dc2626;
   font-size: 0.85rem;
   margin-bottom: 16px;
   font-weight: 600;
-  background: rgba(239, 68, 68, 0.1);
+  background: #fef2f2;
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid #fecaca;
 }
 
-/* BUTTONS */
 .btn-outline {
   height: 42px;
   padding: 0 20px;
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateY(-2px);
+  border-color: #3b82f6;
+  color: #2563eb;
+  background: #f0f7ff;
 }
 
 .btn-primary {
@@ -550,23 +563,21 @@ const fillDemoAdmin = () => {
   font-weight: 700;
   border: none;
   cursor: pointer;
-  background: linear-gradient(135deg, #ff7e5f, #ea580c);
-  color: #fff;
-  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.35);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  transition: all 0.25s ease;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #ff6b4a, #c2410c);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(234, 88, 12, 0.5);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
 }
 
-/* DEMO CARD BOX */
 .demo-card {
   margin-top: 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   padding: 14px 18px;
   border-radius: 14px;
   display: flex;
@@ -582,30 +593,30 @@ const fillDemoAdmin = () => {
 .demo-title {
   font-weight: 700;
   font-size: 0.85rem;
-  color: #fff;
+  color: #0f172a;
 }
 
 .demo-info small {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: 2px;
 }
 
 .btn-auto {
-  background: rgba(255, 126, 95, 0.15);
-  border: 1px solid rgba(255, 126, 95, 0.3);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #feb47b;
+  color: #2563eb;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .btn-auto:hover {
-  background: linear-gradient(135deg, #ff7e5f, #ea580c);
-  color: #fff;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
   border-color: transparent;
 }
 
@@ -618,14 +629,13 @@ const fillDemoAdmin = () => {
 }
 
 .demo-account strong {
-  color: #ff7e5f;
+  color: #2563eb;
 }
 
 .demo-account span {
   color: #64748b;
 }
 
-/* DIVIDER & SWITCH */
 .auth-divider {
   display: flex;
   align-items: center;
@@ -635,7 +645,7 @@ const fillDemoAdmin = () => {
 .auth-divider .line {
   flex: 1;
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #e2e8f0;
 }
 
 .auth-divider p {
@@ -648,19 +658,19 @@ const fillDemoAdmin = () => {
 .auth-switch {
   text-align: center;
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #64748b;
   margin: 0;
 }
 
 .auth-switch a {
-  color: #ff7e5f;
+  color: #2563eb;
   font-weight: 700;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .auth-switch a:hover {
-  color: #feb47b;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
@@ -669,7 +679,7 @@ const fillDemoAdmin = () => {
     grid-template-columns: 1fr;
     gap: 40px;
   }
-  
+
   .hero-title {
     font-size: 2.3rem;
   }
