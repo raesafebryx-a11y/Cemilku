@@ -4,14 +4,32 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const isAdminDark = ref(localStorage.getItem('admin-theme-mode') === 'dark')
+const username = ref(localStorage.getItem('username') || localStorage.getItem('user') || 'Admin')
+const profileImage = ref(localStorage.getItem('profileImage') || '')
+
+const syncProfileState = () => {
+  const savedUsername = localStorage.getItem('username') || localStorage.getItem('user')
+  if (savedUsername) {
+    username.value = savedUsername
+  }
+
+  profileImage.value = localStorage.getItem('profileImage') || ''
+}
 
 onMounted(() => {
+  syncProfileState()
+
   const handleThemeChange = (event) => {
     const nextDark = event.detail?.dark ?? localStorage.getItem('admin-theme-mode') === 'dark'
     isAdminDark.value = nextDark
   }
 
+  const handleStorageUpdate = () => {
+    syncProfileState()
+  }
+
   window.addEventListener('admin-theme-change', handleThemeChange)
+  window.addEventListener('storage', handleStorageUpdate)
 })
 
 // Logo Path & Fallback
@@ -95,7 +113,23 @@ const handleLogout = () => {
 
         <div class="topbar-right">
           <button class="icon-btn" title="Notifikasi">🔔</button>
-          <div class="user-avatar">A</div>
+
+          <button class="user-profile-pill" type="button" @click="router.push('/profile')">
+            <div class="user-avatar">
+              <img
+                v-if="profileImage"
+                :src="profileImage"
+                alt="Foto Profil"
+                class="profile-avatar-img"
+                @error="(e) => { e.target.src = 'https://cdn-icons-png.flaticon.com/512/2553/2553691.png' }"
+              />
+              <span v-else>{{ username.charAt(0).toUpperCase() }}</span>
+            </div>
+            <div class="user-profile-meta">
+              <span>Profil</span>
+              <strong>{{ username }}</strong>
+            </div>
+          </button>
         </div>
       </header>
 
@@ -399,14 +433,60 @@ const handleLogout = () => {
   color: var(--text);
 }
 
+.user-profile-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 999px;
+  padding: 5px 12px 5px 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+
+.user-profile-pill:hover {
+  background: rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: #ffffff;
   display: grid;
   place-items: center;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.user-profile-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.user-profile-meta span {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.user-profile-meta strong {
+  font-size: 12px;
   font-weight: 700;
 }
 

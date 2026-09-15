@@ -33,14 +33,49 @@ const form = ref({
   description: ''
 })
 
+const buildAutoCategoryData = () => {
+  let categories = []
+  try {
+    categories = JSON.parse(localStorage.getItem('cemilku_categories') || '[]')
+  } catch (e) {
+    categories = []
+  }
+
+  const baseName = 'Kategori Baru'
+  const usedNames = new Set(categories.map((cat) => cat.name).filter(Boolean))
+
+  let candidate = baseName
+  let counter = 1
+  while (usedNames.has(candidate)) {
+    candidate = `${baseName} ${counter}`
+    counter += 1
+  }
+
+  const createdAt = new Date().toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+
+  return {
+    name: candidate,
+    description: `Kategori otomatis dibuat pada ${createdAt}.`
+  }
+}
+
+onMounted(() => {
+  const autoCategory = buildAutoCategoryData()
+  form.value.name = autoCategory.name
+  form.value.description = autoCategory.description
+})
+
 // =========================================================
 // SIMPAN KATEGORI
 // =========================================================
 const handleSubmit = () => {
-  if (!form.value.name) {
-    alert('Mohon isi nama kategori terlebih dahulu.')
-    return
-  }
+  const autoCategory = buildAutoCategoryData()
+  form.value.name = autoCategory.name
+  form.value.description = autoCategory.description
 
   let categories = []
   try {
@@ -59,7 +94,7 @@ const handleSubmit = () => {
 
   localStorage.setItem('cemilku_categories', JSON.stringify(categories))
 
-  alert('Kategori berhasil ditambahkan!')
+  alert('Kategori berhasil ditambahkan secara otomatis!')
   router.push('/admin/kategori')
 }
 
@@ -193,7 +228,7 @@ const handleLogout = () => {
           <div class="form-header">
             <div>
               <h3>Informasi Kategori</h3>
-              <p>Isi informasi nama dan deskripsi kategori dengan benar.</p>
+              <p>Nama dan deskripsi kategori akan dibuat otomatis oleh sistem.</p>
             </div>
 
             <!-- IKON KATEGORI -->
@@ -202,33 +237,6 @@ const handleLogout = () => {
 
           <!-- FORM -->
           <form class="product-form" @submit.prevent="handleSubmit">
-            <!-- NAMA KATEGORI -->
-            <div class="form-group full">
-              <label for="category-name">
-                Nama Kategori <span>*</span>
-              </label>
-              <input
-                id="category-name"
-                v-model="form.name"
-                type="text"
-                placeholder="Contoh: Keripik & Basreng"
-                autocomplete="off"
-              />
-              <small>Masukkan nama kategori produk yang jelas dan relevan.</small>
-            </div>
-
-            <!-- DESKRIPSI KATEGORI -->
-            <div class="form-group full">
-              <label for="category-description">Deskripsi Kategori</label>
-              <textarea
-                id="category-description"
-                v-model="form.description"
-                rows="5"
-                placeholder="Contoh: Aneka produk olahan keripik renyah dengan varian rasa pedas dan gurih."
-              ></textarea>
-              <small>Berikan penjelasan singkat mengenai kelompok produk dalam kategori ini.</small>
-            </div>
-
             <!-- RINGKASAN -->
             <div v-if="form.name || form.description" class="product-summary">
               <div class="summary-title">Ringkasan Kategori</div>
