@@ -24,6 +24,7 @@ class OrderController extends Controller
             'customer_name'    => 'required|string|max:255',
             'customer_address' => 'required|string',
             'notes'            => 'nullable|string',
+            'note'             => 'nullable|string', // Antisipasi input tanpa huruf 's'
             'items'            => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.qty'      => 'required|integer|min:1',
@@ -59,11 +60,17 @@ class OrderController extends Controller
                 ];
             }
 
+            // Prioritas user_id: 1. Dari token login Sanctum, 2. Dari request JSON input
+            $userId = auth('sanctum')->id() ?? ($validated['user_id'] ?? null);
+
+            // Prioritas notes: ambil dari 'notes' atau 'note'
+            $notes = $validated['notes'] ?? ($validated['note'] ?? null);
+
             $order = Order::create([
-                'user_id'          => $validated['user_id'] ?? auth()->id(),
+                'user_id'          => $userId,
                 'customer_name'    => $validated['customer_name'],
                 'customer_address' => $validated['customer_address'],
-                'notes'            => $validated['notes'] ?? null,
+                'notes'            => $notes,
                 'total_price'      => $totalPrice,
                 'status'           => 'pending',
             ]);
