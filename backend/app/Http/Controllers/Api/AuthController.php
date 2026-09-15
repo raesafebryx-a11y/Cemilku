@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User; // <--- HAPUS 's', UBAH JADI User
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,27 +14,27 @@ class AuthController extends Controller
     {
         try {
             $request->validate([
-                'name'     => 'required|string|max:255',
-                'email'    => 'required|email|unique:users,email',
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
                 'password' => 'required|min:8',
             ]);
 
-            // UBAH Users::create menjadi User::create
             $user = User::create([
-                'name'     => $request->name,
-                'email'    => $request->email,
+                'name' => $request->name,
+                'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'role' => 'user',
             ]);
 
             return response()->json([
-                'status'  => true,
+                'status' => true,
                 'message' => 'Registrasi berhasil.',
-                'data'    => $user,
+                'data' => $user,
             ], 201);
 
         } catch (Exception $e) {
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
@@ -44,42 +44,67 @@ class AuthController extends Controller
     {
         try {
             $validated = $request->validate([
-                'email'    => 'required|email',
+                'email' => 'required|email',
                 'password' => 'required',
             ]);
 
-            // UBAH Users::where menjadi User::where
             $user = User::where('email', $validated['email'])->first();
 
             if (! $user) {
                 return response()->json([
-                    'status'  => false,
-                    'message' => 'User tidak ditemukan.',
+                    'status' => false,
+                    'message' => 'Email tidak ditemukan.',
                 ], 404);
             }
 
             if (! Hash::check($validated['password'], $user->password)) {
                 return response()->json([
-                    'status'  => false,
+                    'status' => false,
                     'message' => 'Password salah.',
                 ], 401);
             }
 
+            // Hapus token lama agar tidak menumpuk
+            $user->tokens()->delete();
+
+            // Buat token baru
             $token = $user->createToken('api-token')->plainTextToken;
 
             return response()->json([
-                'status'  => true,
+                'status' => true,
                 'message' => 'Login berhasil.',
-                'token'   => $token,
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
             ], 200);
 
         } catch (Exception $e) {
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
     }
 
-    // Method profile dan logout tetap sama...
+    public function profile(Request $request)
+    {
+        return response()->json([
+            'status' => true,
+            'data' => $request->user(),
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Logout berhasil.',
+        ]);
+    }
 }

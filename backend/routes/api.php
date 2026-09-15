@@ -8,37 +8,67 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 
 // ==========================================
-// 1. PUBLIC ROUTES (Tanpa Login)
+// 1. PUBLIC ROUTES
+// Tidak membutuhkan login
 // ==========================================
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Resource Publik (Menampilkan Produk & Kategori tanpa login)
+// Categories
 Route::get('/categories', [CategorieController::class, 'index']);
 Route::get('/categories/{category}', [CategorieController::class, 'show']);
 
+// Products
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 
+
 // ==========================================
-// 2. PROTECTED ROUTES (Wajib Bearer Token)
+// 2. PROTECTED ROUTES
+// Membutuhkan Bearer Token Sanctum
 // ==========================================
+
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth & User Profile
+    // ==========================================
+    // AUTH & USER
+    // ==========================================
+
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Kelola Kategori & Produk (Hanya Admin / User Login yang bisa tambah, edit, hapus)
-    Route::apiResource('categories', CategorieController::class)->except(['index', 'show']);
-    Route::apiResource('products', ProductController::class)->except(['index', 'show']);
 
-    // Order Routes
+    // ==========================================
+    // CATEGORIES
+    // Login diperlukan untuk tambah, edit, hapus
+    // ==========================================
+
+    Route::apiResource('categories', CategorieController::class)
+        ->except(['index', 'show']);
+
+
+    // ==========================================
+    // PRODUCTS
+    // Login diperlukan untuk tambah, edit, hapus
+    // ==========================================
+
+    Route::apiResource('products', ProductController::class)
+        ->except(['index', 'show']);
+
+
+    // ==========================================
+    // ORDERS
+    // ==========================================
+
     Route::get('/orders', [OrderController::class, 'index']);
-    Route::post('/orders', [OrderController::class, 'store']);
-    Route::get('/orders/{id}', [OrderController::class, 'show']);
-    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
 
+    Route::post('/orders', [OrderController::class, 'store']);
+
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+
+    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
 });
