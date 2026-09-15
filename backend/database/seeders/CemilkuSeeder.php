@@ -16,7 +16,7 @@ class CemilkuSeeder extends Seeder
             ],
             [
                 'name' => 'Admin Cemilku',
-                'password' => Hash::make('admin12345'),
+                'password' => Hash::make('password'),
                 'role' => 'admin',
             ]
         );
