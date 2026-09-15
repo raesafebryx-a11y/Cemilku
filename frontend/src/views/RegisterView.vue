@@ -15,6 +15,7 @@ const handleLogoError = (e) => {
 const registerName = ref('')
 const registerEmail = ref('')
 const registerPassword = ref('')
+const showPassword = ref(false)
 const errorMessage = ref('')
 
 const handleRegister = () => {
@@ -163,11 +164,21 @@ const handleRegister = () => {
 
             <div class="auth-form-group">
               <label>Password</label>
-              <input
-                v-model="registerPassword"
-                type="password"
-                placeholder="Buat password baru"
-              />
+              <div class="password-input-wrap">
+                <input
+                  v-model="registerPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Buat password baru"
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  @click="showPassword = !showPassword"
+                  :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+                >
+                  {{ showPassword ? 'Sembunyikan' : 'Lihat' }}
+                </button>
+              </div>
             </div>
 
             <div v-if="errorMessage" class="auth-error">
@@ -470,6 +481,11 @@ const handleRegister = () => {
   margin-bottom: 8px;
 }
 
+.password-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .auth-form-group input {
   width: 100%;
   padding: 14px 16px;
@@ -491,6 +507,29 @@ const handleRegister = () => {
   border-color: #3b82f6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
   background: #ffffff;
+}
+
+.password-input-wrap input {
+  padding-right: 92px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.toggle-password:hover {
+  background: #eff6ff;
 }
 
 .auth-error {

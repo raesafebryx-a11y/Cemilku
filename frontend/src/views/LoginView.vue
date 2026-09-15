@@ -14,6 +14,7 @@ const handleLogoError = (e) => {
 
 const loginUsername = ref('')
 const loginPassword = ref('')
+const showPassword = ref(false)
 const errorMessage = ref('')
 
 const handleLogin = () => {
@@ -53,8 +54,8 @@ const handleLogin = () => {
     loggedInName = foundUser.username || foundUser.email
   } else {
     // 3. Fallback ke akun default (Admin & User biasa)
-    const isAdminDefault = (inputUser.toLowerCase() === 'admin@cemilku.com' && inputPass === 'admin123') ||
-                           (inputUser.toLowerCase().includes('admin') && inputPass === 'admin123')
+    const isAdminDefault = (inputUser.toLowerCase() === 'admin@cemilku.com' && inputPass === 'password') ||
+                           (inputUser.toLowerCase().includes('admin') && inputPass === 'password')
 
     if (isAdminDefault) {
       role = 'admin'
@@ -193,11 +194,21 @@ const handleLogin = () => {
 
             <div class="auth-form-group">
               <label>Password</label>
-              <input
-                v-model="loginPassword"
-                type="password"
-                placeholder="Masukkan password"
-              />
+              <div class="password-input-wrap">
+                <input
+                  v-model="loginPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Masukkan password"
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  @click="showPassword = !showPassword"
+                  :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+                >
+                  {{ showPassword ? 'Sembunyikan' : 'Lihat' }}
+                </button>
+              </div>
             </div>
 
             <div v-if="errorMessage" class="auth-error">
@@ -493,6 +504,11 @@ const handleLogin = () => {
   margin-bottom: 8px;
 }
 
+.password-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .auth-form-group input {
   width: 100%;
   padding: 14px 16px;
@@ -514,6 +530,29 @@ const handleLogin = () => {
   border-color: #3b82f6;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
   background: #ffffff;
+}
+
+.password-input-wrap input {
+  padding-right: 92px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.toggle-password:hover {
+  background: #eff6ff;
 }
 
 .auth-error {
