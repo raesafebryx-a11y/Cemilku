@@ -19,70 +19,77 @@ const errorMessage = ref('')
 const handleLogin = () => {
   errorMessage.value = ''
 
+  // 1. Validasi input kosong
   if (!loginUsername.value || !loginPassword.value) {
     errorMessage.value = 'Username dan password wajib diisi.'
-
     Swal.fire({
       icon: 'warning',
       title: 'Data Belum Lengkap',
       text: 'Harap isi username dan password Anda terlebih dahulu.',
       confirmButtonColor: '#2563eb',
-      cancelButtonColor: '#94a3b8',
       background: '#ffffff',
       color: '#1e293b'
     })
     return
   }
 
-  // Tentukan role berdasarkan input username/email
-  const isUserAdmin = loginUsername.value.toLowerCase().includes('admin')
-  const role = isUserAdmin ? 'admin' : 'user'
+  const inputUser = loginUsername.value.trim()
+  const inputPass = loginPassword.value.trim()
 
-  // Simpan data autentikasi & role ke localStorage
+  // 2. Ambil data database lokal dari proses register (jika ada)
+  const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || []
+  
+  // Cari apakah user terdaftar di localStorage
+  const foundUser = registeredUsers.find(
+    (u) => (u.username === inputUser || u.email === inputUser) && u.password === inputPass
+  )
+
+  let role = 'user'
+  let loggedInName = inputUser
+
+  if (foundUser) {
+    // Jika ditemukan di database pendaftaran lokal
+    role = foundUser.role || 'user'
+    loggedInName = foundUser.username || foundUser.email
+  } else {
+    // 3. Fallback ke akun default (Admin & User biasa)
+    const isAdminDefault = (inputUser.toLowerCase() === 'admin@cemilku.com' && inputPass === 'admin123') ||
+                           (inputUser.toLowerCase().includes('admin') && inputPass === 'admin123')
+
+    if (isAdminDefault) {
+      role = 'admin'
+    } else if (!inputUser.toLowerCase().includes('admin')) {
+      // Jika bukan admin dan diinput manual secara sah
+      role = 'user'
+    } else {
+      errorMessage.value = 'Username atau password salah.'
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Gagal',
+        text: 'Periksa kembali username dan password Anda.',
+        confirmButtonColor: '#2563eb',
+        background: '#ffffff',
+        color: '#1e293b'
+      })
+      return
+    }
+  }
+
+  // 4. Simpan status sesi ke localStorage
   localStorage.setItem('isLoggedIn', 'true')
   localStorage.setItem('userRole', role)
   localStorage.setItem('role', role)
-  localStorage.setItem('username', loginUsername.value)
-  localStorage.setItem('user', loginUsername.value)
+  localStorage.setItem('username', loggedInName)
+  localStorage.setItem('user', loggedInName)
 
-  // Pop-up Notifikasi Berhasil
+  // 5. Notifikasi Berhasil
   Swal.fire({
     icon: 'success',
     title: 'Login Berhasil! 🎉',
-    text: `Selamat datang kembali, ${loginUsername.value}!`,
+    text: `Selamat datang kembali, ${loggedInName}!`,
     timer: 1800,
     showConfirmButton: false,
     timerProgressBar: true,
-    confirmButtonColor: '#2563eb',
-    background: '#ffffff',
-    color: '#1e293b'
-  }).then(() => {
-    router.push('/')
-  })
-}
-
-const fillDemoAdmin = () => {
-  // 1. Isi input form otomatis
-  loginUsername.value = 'admin@cemilku.com'
-  loginPassword.value = 'admin123'
-  errorMessage.value = ''
-
-  // 2. Simpan status auth & role admin ke localStorage
-  localStorage.setItem('isLoggedIn', 'true')
-  localStorage.setItem('userRole', 'admin')
-  localStorage.setItem('role', 'admin')
-  localStorage.setItem('username', 'admin@cemilku.com')
-  localStorage.setItem('user', 'admin@cemilku.com')
-
-  // Notifikasi Demo Admin Berhasil
-  Swal.fire({
-    icon: 'success',
-    title: 'Akses Admin Ditentukan! 🛡️',
-    text: 'Berhasil masuk menggunakan akun Demo Admin.',
-    timer: 1800,
-    showConfirmButton: false,
-    timerProgressBar: true,
-    confirmButtonColor: '#2563eb',
     background: '#ffffff',
     color: '#1e293b'
   }).then(() => {
@@ -180,7 +187,7 @@ const fillDemoAdmin = () => {
               <input
                 v-model="loginUsername"
                 type="text"
-                placeholder="pelanggan atau admin@cemilku.com"
+                placeholder="Masukkan username atau email"
               />
             </div>
 
@@ -201,22 +208,6 @@ const fillDemoAdmin = () => {
               Masuk ke Akun
             </button>
           </form>
-
-          <!-- Demo Admin Box -->
-          <div class="demo-card">
-            <div class="demo-info">
-              <span class="demo-title">🛡️ Demo Admin</span>
-              <small>Gunakan akun berikut untuk mencoba dashboard.</small>
-            </div>
-            <button class="btn-auto" type="button" @click="fillDemoAdmin">
-              Isi Otomatis
-            </button>
-          </div>
-
-          <div class="demo-account">
-            <strong>admin@cemilku.com</strong>
-            <span>admin123</span>
-          </div>
 
           <div class="auth-divider">
             <span class="line"></span>
@@ -572,68 +563,6 @@ const fillDemoAdmin = () => {
 .btn-primary:hover {
   transform: translateY(-1.5px);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
-}
-
-.demo-card {
-  margin-top: 24px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  padding: 14px 18px;
-  border-radius: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.demo-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.demo-title {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #0f172a;
-}
-
-.demo-info small {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-.btn-auto {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #2563eb;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-auto:hover {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: #ffffff;
-  border-color: transparent;
-}
-
-.demo-account {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  margin-top: 10px;
-  padding: 0 6px;
-}
-
-.demo-account strong {
-  color: #2563eb;
-}
-
-.demo-account span {
-  color: #64748b;
 }
 
 .auth-divider {
