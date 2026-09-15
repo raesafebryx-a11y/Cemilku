@@ -9,6 +9,13 @@ const router = useRouter()
 const isLoggedIn = ref(false)
 const userRole = ref('')
 const username = ref('')
+const email = ref('')
+const phone = ref('')
+const address = ref('')
+const joinedDate = ref('')
+
+// State Foto Profil (Tersimpan di localStorage)
+const profileImage = ref(localStorage.getItem('profileImage') || '')
 
 // Dark Mode State
 const isDarkMode = ref(false)
@@ -25,12 +32,24 @@ const handleLogoError = (e) => {
   e.target.src = 'https://cdn-icons-png.flaticon.com/512/2553/2553691.png'
 }
 
+// Cek status login, profil & tema saat komponen dimuat
 const checkAuthStatus = () => {
-  isLoggedIn.value = localStorage.getItem('isLoggedIn') === 'true'
+  const loggedIn = localStorage.getItem('isLoggedIn') === 'true'
+  if (!loggedIn) {
+    // Jika belum login, alihkan ke halaman login
+    router.push('/login')
+    return
+  }
+
+  isLoggedIn.value = true
   userRole.value = localStorage.getItem('userRole') || localStorage.getItem('role') || 'user'
-  username.value = localStorage.getItem('username') || localStorage.getItem('user') || ''
+  username.value = localStorage.getItem('username') || localStorage.getItem('user') || 'Pengguna Cemilku'
+  email.value = localStorage.getItem('email') || `${username.value.toLowerCase().replace(/\s+/g, '')}@example.com`
+  phone.value = localStorage.getItem('phone') || '+62 812-3456-7890'
+  address.value = localStorage.getItem('address') || 'Jl. Raya Camilan No. 123, Bandung, Jawa Barat'
+  joinedDate.value = localStorage.getItem('joinedDate') || 'Januari 2026'
   
-  // Cek mode gelap dari localStorage
+  // Cek mode gelap yang tersimpan
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme === 'dark') {
     isDarkMode.value = true
@@ -41,6 +60,86 @@ onMounted(() => {
   checkAuthStatus()
 })
 
+// Fungsi Ubah Foto Profil (Base64 storage)
+const handleImageUpload = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Validasi ukuran gambar (Maksimal 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    const isDark = isDarkMode.value
+    Swal.fire({
+      icon: 'error',
+      title: 'Ukuran Gambar Terlalu Besar',
+      text: 'Maksimal ukuran foto profil adalah 2MB.',
+      background: isDark ? '#1e293b' : '#ffffff',
+      color: isDark ? '#f8fafc' : '#1e293b'
+    })
+    return
+  }
+
+  // Membaca file gambar dan mengonversi ke URL Base64
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    profileImage.value = e.target.result
+    localStorage.setItem('profileImage', profileImage.value)
+    
+    const isDark = isDarkMode.value
+    Swal.fire({
+      icon: 'success',
+      title: 'Foto Profil Diperbarui ✨',
+      text: 'Foto profil Anda berhasil diubah.',
+      timer: 1800,
+      showConfirmButton: false,
+      background: isDark ? '#1e293b' : '#ffffff',
+      color: isDark ? '#f8fafc' : '#1e293b'
+    })
+  }
+  reader.readAsDataURL(file)
+}
+
+// Fungsi Edit Profil Sederhana
+const isEditing = ref(false)
+const editForm = ref({
+  username: '',
+  phone: '',
+  address: ''
+})
+
+const startEdit = () => {
+  editForm.value = {
+    username: username.value,
+    phone: phone.value,
+    address: address.value
+  }
+  isEditing.value = true
+}
+
+const saveProfile = () => {
+  username.value = editForm.value.username
+  phone.value = editForm.value.phone
+  address.value = editForm.value.address
+
+  localStorage.setItem('username', username.value)
+  localStorage.setItem('user', username.value)
+  localStorage.setItem('phone', phone.value)
+  localStorage.setItem('address', address.value)
+
+  isEditing.value = false
+
+  const isDark = isDarkMode.value
+  Swal.fire({
+    icon: 'success',
+    title: 'Profil Diperbarui ✨',
+    text: 'Informasi profil Anda berhasil disimpan.',
+    timer: 1800,
+    showConfirmButton: false,
+    background: isDark ? '#1e293b' : '#ffffff',
+    color: isDark ? '#f8fafc' : '#1e293b'
+  })
+}
+
+// Fungsi Logout dengan SweetAlert2
 const handleLogout = () => {
   const isDark = isDarkMode.value
   Swal.fire({
@@ -82,51 +181,11 @@ const handleLogout = () => {
     }
   })
 }
-
-// Form Contact State
-const contactForm = ref({
-  name: '',
-  email: '',
-  message: ''
-})
-
-const isSending = ref(false)
-
-const handleSendMessage = () => {
-  const isDark = isDarkMode.value
-  if (!contactForm.value.name || !contactForm.value.email || !contactForm.value.message) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Form Belum Lengkap',
-      text: 'Harap isi semua bidang sebelum mengirim pesan.',
-      confirmButtonColor: '#2563eb',
-      background: isDark ? '#1e293b' : '#ffffff',
-      color: isDark ? '#f8fafc' : '#1e293b'
-    })
-    return
-  }
-
-  isSending.value = true
-
-  setTimeout(() => {
-    isSending.value = false
-    Swal.fire({
-      icon: 'success',
-      title: 'Pesan Terkirim! 🚀',
-      text: 'Terima kasih telah menghubungi kami. Tim kami akan segera membalasnya.',
-      confirmButtonColor: '#2563eb',
-      background: isDark ? '#1e293b' : '#ffffff',
-      color: isDark ? '#f8fafc' : '#1e293b'
-    })
-
-    contactForm.value = { name: '', email: '', message: '' }
-  }, 1200)
-}
 </script>
 
 <template>
-  <div class="page-wrapper" :class="{ 'dark-mode': isDarkMode }">
-    <!-- BACKGROUND AMBIENT GLOW -->
+  <div class="profile-wrapper" :class="{ 'dark-mode': isDarkMode }">
+    <!-- DEKORASI GELOMBANG & ORNAMEN BIRU -->
     <div class="bg-shape bg-shape-1"></div>
     <div class="bg-shape bg-shape-2"></div>
     <div class="bg-shape bg-shape-3"></div>
@@ -159,7 +218,7 @@ const handleSendMessage = () => {
           <button class="nav-btn" @click="router.push('/tentang-kami')">
             Tentang Kami
           </button>
-          <button class="nav-btn active" @click="router.push('/kontak')">
+          <button class="nav-btn" @click="router.push('/kontak')">
             Kontak
           </button>
           <button 
@@ -185,8 +244,8 @@ const handleSendMessage = () => {
               <strong class="user-email">{{ username }}</strong>
             </div>
 
-            <!-- TOMBOL PROFIL YANG DISAMAKAN -->
-            <button class="btn-profile" @click="router.push('/profile')">
+            <!-- BUTTON PROFIL (AKTIF) -->
+            <button class="btn-profile active" @click="router.push('/profile')">
               👤 Profil
             </button>
 
@@ -207,154 +266,127 @@ const handleSendMessage = () => {
       </div>
     </header>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN PROFILE SECTION -->
     <main class="main-content">
       <div class="container">
         
-        <!-- HERO PAGE HEADER -->
-        <section class="page-hero">
-          <div class="hero-badge">
-            <span class="pulse-dot"></span>
-            Layanan Pelanggan
-          </div>
-          <h1 class="page-title">
-            Hubungi Tim <span class="gradient-text">Cemilku Store</span>
-          </h1>
-          <p class="page-desc">
-            Punya pertanyaan seputar produk, pesanan khusus, atau tawaran kerja sama? Kami siap mendengarkan dan membantu Anda.
-          </p>
-        </section>
-
-        <!-- CONTACT CONTENT GRID -->
-        <section class="contact-grid">
-          
-          <!-- LEFT CONTACT CARDS -->
-          <div class="contact-info-list">
-            <div class="contact-info-card">
-              <div class="info-icon">📍</div>
-              <div>
-                <h4>Alamat Utama</h4>
-                <p>Jl. Camilan Lezat No. 12, Bandung, Jawa Barat</p>
-              </div>
-            </div>
-
-            <div class="contact-info-card">
-              <div class="info-icon">💬</div>
-              <div>
-                <h4>WhatsApp CS</h4>
-                <p>+62 961-986-9600 (Respon Cepat)</p>
-              </div>
-            </div>
-
-            <div class="contact-info-card">
-              <div class="info-icon">✉️</div>
-              <div>
-                <h4>Email Resmi</h4>
-                <p>admin@cemilku.com</p>
-              </div>
-            </div>
-
-            <div class="contact-info-card">
-              <div class="info-icon">⏰</div>
-              <div>
-                <h4>Jam Operasional</h4>
-                <p>Senin - Sabtu: 08:00 - 20:00 WIB</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- RIGHT CONTACT FORM CARD -->
-          <div class="contact-form-card">
-            <h3>Kirim Pesan Direct</h3>
-            <p class="form-sub">Isi formulir di bawah ini untuk terhubung langsung.</p>
-
-            <form @submit.prevent="handleSendMessage" class="contact-form">
-              <div class="form-group">
-                <label>Nama Lengkap</label>
-                <input 
-                  type="text" 
-                  v-model="contactForm.name"
-                  placeholder="Masukkan nama Anda..."
-                />
+        <div class="profile-card-container">
+          <!-- HEADER CARD -->
+          <div class="profile-header-card">
+            <!-- AVATAR BOX & UBAH FOTO PROFIL -->
+            <div class="avatar-wrapper">
+              <div class="avatar-box">
+                <img v-if="profileImage" :src="profileImage" alt="Foto Profil" class="profile-img" />
+                <span v-else>{{ username ? username.charAt(0).toUpperCase() : 'U' }}</span>
               </div>
 
-              <div class="form-group">
-                <label>Alamat Email</label>
-                <input 
-                  type="email" 
-                  v-model="contactForm.email"
-                  placeholder="nama@email.com"
-                />
-              </div>
+              <!-- Input file tersembunyi untuk foto -->
+              <input
+                type="file"
+                ref="fileInput"
+                accept="image/*"
+                class="file-input-hidden"
+                @change="handleImageUpload"
+              />
 
-              <div class="form-group">
-                <label>Pesan Anda</label>
-                <textarea 
-                  rows="4" 
-                  v-model="contactForm.message"
-                  placeholder="Tuliskan pertanyaan atau pesan Anda di sini..."
-                ></textarea>
-              </div>
-
-              <button type="submit" class="btn-send-message" :disabled="isSending">
-                {{ isSending ? 'Mengirim...' : 'Kirim Pesan 🚀' }}
+              <!-- Tombol Ubah Foto -->
+              <button 
+                class="btn-change-photo" 
+                @click="$refs.fileInput.click()" 
+                title="Ubah Foto Profil"
+              >
+                📷
               </button>
-            </form>
+
+              <span class="role-badge">{{ userRole.toUpperCase() }}</span>
+            </div>
+            
+            <div class="user-main-info">
+              <h1>{{ username }}</h1>
+              <p>{{ email }}</p>
+              <small>Anggota sejak: {{ joinedDate }}</small>
+            </div>
           </div>
 
-        </section>
+          <!-- DETAIL INFORMASI & EDIT FORM -->
+          <div class="profile-body-card">
+            <div class="body-header">
+              <h2>Informasi Akun</h2>
+              <button v-if="!isEditing" class="btn-edit" @click="startEdit">
+                ✏️ Edit Profil
+              </button>
+            </div>
+
+            <!-- TAMPILAN VIEW DATA -->
+            <div v-if="!isEditing" class="info-grid">
+              <div class="info-item">
+                <label>Nama Pengguna</label>
+                <p>{{ username }}</p>
+              </div>
+
+              <div class="info-item">
+                <label>Alamat Email</label>
+                <p>{{ email }}</p>
+              </div>
+
+              <div class="info-item">
+                <label>Nomor Telepon</label>
+                <p>{{ phone }}</p>
+              </div>
+
+              <div class="info-item full-width">
+                <label>Alamat Pengiriman</label>
+                <p>{{ address }}</p>
+              </div>
+            </div>
+
+            <!-- TAMPILAN FORM EDIT DATA -->
+            <form v-else @submit.prevent="saveProfile" class="edit-form">
+              <div class="form-group">
+                <label>Nama Pengguna</label>
+                <input v-model="editForm.username" type="text" required />
+              </div>
+
+              <div class="form-group">
+                <label>Nomor Telepon</label>
+                <input v-model="editForm.phone" type="text" required />
+              </div>
+
+              <div class="form-group full-width">
+                <label>Alamat Pengiriman</label>
+                <textarea v-model="editForm.address" rows="3" required></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn-cancel" @click="isEditing = false">
+                  Batal
+                </button>
+                <button type="submit" class="btn-save">
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
 
       </div>
     </main>
 
-    <!-- FOOTER -->
+    <!-- FOOTER LIGHT ICE BLUE -->
     <footer class="footer">
       <div class="container footer-content">
-        <div class="footer-grid">
-          <div class="footer-brand-block">
-            <div class="footer-brand">
-              <div class="brand-mark small">
-                <img :src="logoCemilku" alt="Logo" class="cemilku-logo-img" @error="handleLogoError" />
-              </div>
-              <span class="brand-text">Cemilku</span>
+        <div class="footer-top">
+          <div class="footer-brand">
+            <div class="brand-mark small">
+              <img :src="logoCemilku" alt="Logo" class="cemilku-logo-img" @error="handleLogoError" />
             </div>
-            <p class="footer-desc">
-              Pusat camilan renyah dan nikmat dengan pengiriman cepat, kemasan aman, dan rasa yang selalu bikin nagih.
-            </p>
-            <div class="social-row">
-              <a href="#" aria-label="Instagram">📸</a>
-              <a href="#" aria-label="Facebook">📘</a>
-              <a href="#" aria-label="WhatsApp">💬</a>
-            </div>
+            <span class="brand-text">Cemilku</span>
           </div>
-
-          <div class="footer-column">
-            <h4>Menu</h4>
-            <ul>
-              <li><a href="#">Produk</a></li>
-              <li><a href="#">Tentang Kami</a></li>
-              <li><a href="#">Kontak</a></li>
-              <li><a href="#">Bantuan</a></li>
-            </ul>
-          </div>
-
-          <div class="footer-column">
-            <h4>Kontak</h4>
-            <ul class="contact-list">
-              <li>📍 Jl. Camilan Lezat No. 12, Bandung, Jawa Barat</li>
-              <li>📞 089619869600</li>
-              <li>✉️ admin@cemilku.com</li>
-              <li>🕘 Senin - Minggu, 08.00 - 21.00</li>
-            </ul>
-          </div>
+          <p class="footer-desc">Pusat camilan renyah dan nikmat dengan pengiriman praktis ke seluruh Indonesia.</p>
         </div>
-
         <div class="footer-bottom">
           <small>© 2026 Cemilku Snack Store. All rights reserved.</small>
-          <div class="footer-meta">
-            <span>Privacy Policy</span>
-            <span>Terms</span>
-          </div>
         </div>
       </div>
     </footer>
@@ -363,7 +395,7 @@ const handleSendMessage = () => {
 
 <style scoped>
 /* GLOBAL & BASE STYLES */
-.page-wrapper {
+.profile-wrapper {
   min-height: 100vh;
   background-color: #f6f8fb;
   color: #1e293b;
@@ -392,6 +424,7 @@ const handleSendMessage = () => {
   pointer-events: none;
   z-index: 0;
   opacity: 0.7;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bg-shape-1 {
@@ -522,12 +555,6 @@ const handleSendMessage = () => {
   background: rgba(255, 255, 255, 0.5);
 }
 
-.nav-btn.active {
-  background: #ffffff;
-  color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-}
-
 .btn-dashboard {
   background: #2563eb !important;
   color: #ffffff !important;
@@ -590,13 +617,11 @@ const handleSendMessage = () => {
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   transition: all 0.25s ease;
 }
 
-.btn-profile:hover {
+.btn-profile:hover,
+.btn-profile.active {
   background: #2563eb;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
@@ -656,7 +681,7 @@ const handleSendMessage = () => {
   transform: translateY(-1.5px);
 }
 
-/* MAIN CONTENT */
+/* MAIN CONTENT SECTION */
 .main-content {
   flex: 1;
   padding: 50px 0 80px;
@@ -664,213 +689,268 @@ const handleSendMessage = () => {
   z-index: 1;
 }
 
-/* HERO PAGE HEADER */
-.page-hero {
-  text-align: center;
-  max-width: 760px;
-  margin: 0 auto 50px auto;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #eff6ff;
-  color: #2563eb;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 20px;
-  margin-bottom: 20px;
-  border: 1px solid #bfdbfe;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
-}
-
-.pulse-dot {
-  width: 7px;
-  height: 7px;
-  background-color: #2563eb;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
-  animation: pulse 1.8s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-}
-
-.page-title {
-  font-size: 2.8rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 16px;
-  letter-spacing: -0.03em;
-  color: #0f172a;
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.page-desc {
-  color: #64748b;
-  font-size: 1.05rem;
-  line-height: 1.65;
+/* PROFILE CARD DESIGN */
+.profile-card-container {
+  max-width: 800px;
   margin: 0 auto;
-}
-
-/* CONTACT GRID */
-.contact-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 32px;
-  align-items: start;
-}
-
-.contact-info-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
-.contact-info-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 22px 24px;
+.profile-header-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 24px;
+  padding: 32px;
   display: flex;
   align-items: center;
-  gap: 18px;
-  box-shadow: 0 6px 20px -5px rgba(37, 99, 235, 0.04);
-  transition: transform 0.3s ease;
+  gap: 24px;
+  box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.08);
 }
 
-.contact-info-card:hover {
-  transform: translateY(-3px);
-  border-color: #cbd5e1;
+.avatar-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.info-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: #eff6ff;
+.avatar-box {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #ffffff;
+  font-size: 2.6rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35rem;
-  flex-shrink: 0;
-  border: 1px solid #dbeafe;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  overflow: hidden;
 }
 
-.contact-info-card h4 {
-  font-size: 1.05rem;
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.btn-change-photo {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  background: #2563eb;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  z-index: 2;
+}
+
+.btn-change-photo:hover {
+  transform: scale(1.12);
+  background: #1d4ed8;
+}
+
+.role-badge {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #10b981;
+  color: #ffffff;
+  font-size: 0.65rem;
   font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 3px 0;
+  padding: 2px 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  z-index: 2;
 }
 
-.contact-info-card p {
-  font-size: 0.875rem;
-  color: #64748b;
-  margin: 0;
-}
-
-/* CONTACT FORM CARD */
-.contact-form-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 28px;
-  padding: 36px 32px;
-  box-shadow: 0 16px 35px -10px rgba(37, 99, 235, 0.08);
-}
-
-.contact-form-card h3 {
-  font-size: 1.45rem;
+.user-main-info h1 {
+  font-size: 1.6rem;
   font-weight: 800;
   color: #0f172a;
   margin: 0 0 4px 0;
 }
 
-.form-sub {
+.user-main-info p {
   color: #64748b;
-  font-size: 0.9rem;
-  margin: 0 0 24px 0;
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
 }
 
-.contact-form {
+.user-main-info small {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+/* PROFILE BODY CARD */
+.profile-body-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.03);
+}
+
+.body-header {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.body-header h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.btn-edit {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-edit:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.info-item {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #f1f5f9;
+}
+
+.info-item.full-width {
+  grid-column: span 2;
+}
+
+.info-item label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-item p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* EDIT FORM */
+.edit-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
 }
 
 .form-group label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #334155;
+  color: #475569;
 }
 
 .form-group input,
 .form-group textarea {
-  width: 100%;
-  padding: 14px 16px;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
   font-size: 0.9rem;
   color: #0f172a;
   outline: none;
   font-family: inherit;
   transition: all 0.25s ease;
-  box-sizing: border-box;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: #3b82f6;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-.btn-send-message {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: #ffffff;
-  border: none;
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 0.95rem;
+.form-actions {
+  grid-column: span 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.btn-cancel {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 10px 20px;
+  border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
-  transition: all 0.25s ease;
-  margin-top: 6px;
 }
 
-.btn-send-message:hover:not(:disabled) {
-  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
-  transform: translateY(-2px);
-}
-
-.btn-send-message:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.btn-save {
+  background: #2563eb;
+  border: none;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 /* FOOTER */
 .footer {
   border-top: 1px solid #e2e8f0;
-  padding: 52px 0 28px;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  padding: 44px 0 24px;
+  background: #ffffff;
   margin-top: auto;
   transition: all 0.3s ease;
 }
@@ -878,20 +958,16 @@ const handleSendMessage = () => {
 .footer-content {
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
 }
 
-.footer-grid {
-  display: grid;
-  grid-template-columns: 1.4fr 0.8fr 1fr;
-  gap: 32px;
-  align-items: start;
-}
-
-.footer-brand-block {
+.footer-top {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
 }
 
 .footer-brand {
@@ -903,83 +979,14 @@ const handleSendMessage = () => {
 .footer-desc {
   color: #64748b;
   font-size: 0.875rem;
-  line-height: 1.7;
-  max-width: 420px;
-  margin: 0;
-  text-align: left;
-}
-
-.social-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.social-row a {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
-  font-size: 1rem;
-  transition: all 0.25s ease;
-}
-
-.social-row a:hover {
-  background: #2563eb;
-  color: #ffffff;
-  transform: translateY(-2px);
-}
-
-.footer-column h4 {
-  font-size: 0.92rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 14px;
-  text-align: left;
-}
-
-.footer-column ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.footer-column a,
-.contact-list li {
-  color: #64748b;
-  font-size: 0.85rem;
-  text-decoration: none;
-  line-height: 1.6;
-  text-align: left;
-}
-
-.footer-column a:hover {
-  color: #2563eb;
-}
-
-.contact-list {
-  list-style: none;
-  padding: 0;
+  max-width: 440px;
   margin: 0;
 }
 
 .footer-bottom {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #f1f5f9;
   width: 100%;
   padding-top: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 
 .footer-bottom small {
@@ -987,16 +994,8 @@ const handleSendMessage = () => {
   font-size: 0.75rem;
 }
 
-.footer-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  color: #64748b;
-  font-size: 0.75rem;
-}
-
 /* ============================================================ */
-/* DARK MODE STYLES                                            */
+/* DARK MODE STYLES                                             */
 /* ============================================================ */
 .dark-mode {
   background-color: #0f172a !important;
@@ -1034,11 +1033,6 @@ const handleSendMessage = () => {
   background: rgba(51, 65, 85, 0.5) !important;
 }
 
-.dark-mode .nav-btn.active {
-  background: #1e293b !important;
-  color: #60a5fa !important;
-}
-
 .dark-mode .btn-theme-toggle {
   background: #1e293b !important;
   border-color: #334155 !important;
@@ -1059,6 +1053,7 @@ const handleSendMessage = () => {
   color: #60a5fa !important;
 }
 
+.dark-mode .btn-profile.active,
 .dark-mode .btn-profile:hover {
   background: #2563eb !important;
   color: #ffffff !important;
@@ -1070,49 +1065,54 @@ const handleSendMessage = () => {
   color: #cbd5e1 !important;
 }
 
-.dark-mode .page-title {
-  color: #f8fafc !important;
-}
-
-.dark-mode .page-desc {
-  color: #94a3b8 !important;
-}
-
-.dark-mode .hero-badge {
-  background: rgba(30, 41, 59, 0.8) !important;
+.dark-mode .btn-outline:hover {
+  background: #334155 !important;
   color: #60a5fa !important;
-  border-color: #1e3a8a !important;
 }
 
-.dark-mode .contact-info-card {
+.dark-mode .profile-header-card {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-color: #334155 !important;
+}
+
+.dark-mode .btn-change-photo {
+  border-color: #1e293b !important;
+}
+
+.dark-mode .user-main-info h1 {
+  color: #f8fafc !important;
+}
+
+.dark-mode .user-main-info p {
+  color: #94a3b8 !important;
+}
+
+.dark-mode .profile-body-card {
   background: #1e293b !important;
   border-color: #334155 !important;
 }
 
-.dark-mode .info-icon {
+.dark-mode .body-header h2 {
+  color: #f8fafc !important;
+}
+
+.dark-mode .btn-edit {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+.dark-mode .info-item {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border-color: #1e293b !important;
 }
 
-.dark-mode .contact-info-card h4 {
+.dark-mode .info-item label {
+  color: #64748b !important;
+}
+
+.dark-mode .info-item p {
   color: #f8fafc !important;
-}
-
-.dark-mode .contact-info-card p {
-  color: #94a3b8 !important;
-}
-
-.dark-mode .contact-form-card {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-}
-
-.dark-mode .contact-form-card h3 {
-  color: #f8fafc !important;
-}
-
-.dark-mode .form-sub {
-  color: #94a3b8 !important;
 }
 
 .dark-mode .form-group label {
@@ -1126,51 +1126,41 @@ const handleSendMessage = () => {
   color: #f8fafc !important;
 }
 
-.dark-mode .form-group input:focus,
-.dark-mode .form-group textarea:focus {
-  border-color: #3b82f6 !important;
+.dark-mode .btn-cancel {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
 }
 
 .dark-mode .footer {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 1) 0%, rgba(15, 23, 42, 0.96) 100%) !important;
+  background: #0f172a !important;
   border-top-color: #1e293b !important;
 }
 
-.dark-mode .footer-desc,
-.dark-mode .footer-column a,
-.dark-mode .contact-list li,
-.dark-mode .footer-meta {
+.dark-mode .footer-desc {
   color: #94a3b8 !important;
-}
-
-.dark-mode .footer-column h4 {
-  color: #f8fafc !important;
-}
-
-.dark-mode .social-row a {
-  background: rgba(30, 41, 59, 0.9) !important;
-  color: #60a5fa !important;
 }
 
 .dark-mode .footer-bottom {
   border-top-color: #1e293b !important;
 }
 
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .contact-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .footer-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 520px) {
-  .footer-bottom {
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .profile-header-card {
     flex-direction: column;
-    align-items: flex-start;
+    text-align: center;
+  }
+
+  .info-grid,
+  .edit-form {
+    grid-template-columns: 1fr;
+  }
+
+  .info-item.full-width,
+  .form-group.full-width,
+  .form-actions {
+    grid-column: span 1;
   }
 }
 </style>

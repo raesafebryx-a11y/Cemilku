@@ -1,8 +1,18 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const isAdminDark = ref(localStorage.getItem('admin-theme-mode') === 'dark')
+
+onMounted(() => {
+  const handleThemeChange = (event) => {
+    const nextDark = event.detail?.dark ?? localStorage.getItem('admin-theme-mode') === 'dark'
+    isAdminDark.value = nextDark
+  }
+
+  window.addEventListener('admin-theme-change', handleThemeChange)
+})
 
 // Logo Path & Fallback
 const logoCemilku = ref('/images/cemilku-logo.png')
@@ -21,7 +31,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="{ 'navbar-dark': isAdminDark }">
     <!-- SIDEBAR KIRI -->
     <aside class="sidebar">
       <div class="sidebar-brand" @click="router.push('/')">
@@ -84,7 +94,7 @@ const handleLogout = () => {
         </div>
 
         <div class="topbar-right">
-          <button class="icon-btn">🔔</button>
+          <button class="icon-btn" title="Notifikasi">🔔</button>
           <div class="user-avatar">A</div>
         </div>
       </header>
@@ -120,7 +130,7 @@ const handleLogout = () => {
               <tbody>
                 <tr v-for="item in orderItems" :key="item.id">
                   <td class="font-bold">#{{ item.id }}</td>
-                  <td>{{ item.orderId }}</td>
+                  <td>#{{ item.orderId }}</td>
                   <td class="font-bold">{{ item.productName }}</td>
                   <td><span class="qty-badge">{{ item.qty }} pcs</span></td>
                   <td><span class="price-tag">{{ item.subtotal }}</span></td>
@@ -131,7 +141,7 @@ const handleLogout = () => {
         </div>
 
         <div v-else class="empty-state">
-          <p>Belum ada data</p>
+          <p>Belum ada rincian item pesanan</p>
         </div>
       </main>
     </div>
@@ -148,24 +158,63 @@ const handleLogout = () => {
   display: none !important;
 }
 
-/* LAYOUT BASE */
+/* LAYOUT BASE & DYNAMIC THEME VARIABLES */
 .dashboard-layout {
+  --page-bg: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  --sidebar-bg: rgba(255, 255, 255, 0.82);
+  --sidebar-border: rgba(226, 232, 240, 0.95);
+  --topbar-bg: rgba(255, 255, 255, 0.78);
+  --topbar-border: rgba(226, 232, 240, 0.95);
+  --surface: rgba(255, 255, 255, 0.9);
+  --table-header-bg: #f1f5f9;
+  --input-bg: rgba(148, 163, 184, 0.06);
+  --badge-bg: rgba(148, 163, 184, 0.12);
+  --badge-text: #334155;
+  --text: #0f172a;
+  --muted: #64748b;
+  --nav-text: #475569;
+  --nav-hover: #eff6ff;
+  --nav-active: linear-gradient(135deg, #2563eb, #3b82f6);
+  --panel-border: rgba(226, 232, 240, 0.9);
+  
   display: flex;
   min-height: 100vh;
-  background-color: #0f0f0f;
-  color: #ffffff;
-  font-family: system-ui, -apple-system, sans-serif;
+  width: 100%;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   position: relative;
+}
+
+.dashboard-layout.navbar-dark {
+  --page-bg: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  --sidebar-bg: rgba(15, 23, 42, 0.85);
+  --sidebar-border: rgba(51, 65, 85, 0.9);
+  --topbar-bg: rgba(15, 23, 42, 0.8);
+  --topbar-border: rgba(51, 65, 85, 0.9);
+  --surface: rgba(15, 23, 42, 0.82);
+  --table-header-bg: #1e293b;
+  --input-bg: #1e293b;
+  --badge-bg: #334155;
+  --badge-text: #f1f5f9;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --nav-text: #cbd5e1;
+  --nav-hover: rgba(59, 130, 246, 0.12);
+  --nav-active: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  --panel-border: rgba(51, 65, 85, 0.9);
 }
 
 /* SIDEBAR KIRI */
 .sidebar {
   width: 250px;
-  background-color: #18181b;
-  border-right: 1px solid #27272a;
+  min-height: 100vh;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  backdrop-filter: blur(14px);
 }
 
 .sidebar-brand {
@@ -173,7 +222,7 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid var(--sidebar-border);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -186,13 +235,14 @@ const handleLogout = () => {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #fb923c, #ea580c);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   padding: 3px;
   flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
 }
 
 .cemilku-logo-img {
@@ -210,7 +260,7 @@ const handleLogout = () => {
 .brand-text {
   font-weight: 800;
   font-size: 1.3rem;
-  color: #ffffff;
+  color: var(--text);
   letter-spacing: -0.05em;
   line-height: 1.1;
 }
@@ -218,8 +268,8 @@ const handleLogout = () => {
 .brand-info small {
   font-size: 0.58rem;
   letter-spacing: 0.16em;
-  color: #a1a1aa;
-  font-weight: 600;
+  color: #2563eb;
+  font-weight: 700;
   text-transform: uppercase;
   margin-top: 2px;
 }
@@ -234,7 +284,7 @@ const handleLogout = () => {
 .menu-category {
   font-size: 10px;
   font-weight: 700;
-  color: #71717a;
+  color: var(--muted);
   padding: 12px 12px 4px 12px;
   letter-spacing: 0.5px;
 }
@@ -244,27 +294,41 @@ const handleLogout = () => {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  color: #a1a1aa;
+  color: var(--nav-text);
   text-decoration: none;
   font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.2s;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s ease;
 }
 
-.menu-item:hover, .menu-item.router-link-active {
-  background-color: #27272a;
-  color: #ffffff;
+.menu-item:hover, 
+.menu-item.router-link-active {
+  background: var(--nav-hover);
+  color: var(--text);
 }
 
 .menu-item.router-link-active.active,
 .menu-item.active {
-  background-color: #ea580c;
+  background: var(--nav-active);
   color: #ffffff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+}
+
+.menu-icon {
+  width: 20px;
+  min-width: 20px;
+  text-align: center;
+  font-size: 15px;
 }
 
 .menu-item.logout {
   color: #ef4444;
+}
+
+.menu-item.logout:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
 }
 
 /* MAIN WRAPPER */
@@ -278,31 +342,42 @@ const handleLogout = () => {
 /* TOPBAR */
 .topbar {
   height: 64px;
-  background-color: #18181b;
-  border-bottom: 1px solid #27272a;
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
+  backdrop-filter: blur(14px);
 }
 
 .search-box {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #27272a;
+  background: var(--input-bg);
+  border: 1px solid var(--panel-border);
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   width: 300px;
+}
+
+.search-icon {
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .search-box input {
   background: transparent;
   border: none;
   outline: none;
-  color: #ffffff;
+  color: var(--text);
   font-size: 13px;
   width: 100%;
+}
+
+.search-box input::placeholder {
+  color: var(--muted);
 }
 
 .topbar-right {
@@ -312,17 +387,23 @@ const handleLogout = () => {
 }
 
 .icon-btn {
-  background: transparent;
-  border: none;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 16px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
 }
 
 .user-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: #ea580c;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: #ffffff;
   display: grid;
   place-items: center;
@@ -336,11 +417,12 @@ const handleLogout = () => {
 
 /* DASHBOARD BANNER BAR */
 .dashboard-banner {
-  background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
-  border: 1px solid #3f3f46;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
   padding: 28px;
   margin-top: 24px;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.05);
 }
 
 .banner-content {
@@ -351,34 +433,36 @@ const handleLogout = () => {
 
 .banner-content h1 {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
+  color: var(--text);
 }
 
 .banner-sub {
-  color: #a1a1aa;
+  color: var(--muted);
   font-size: 13px;
   margin: 6px 0 0 0;
 }
 
 /* TABLE CARD */
 .table-card {
-  background-color: #18181b;
-  border: 1px solid #27272a;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
   margin-top: 24px;
   overflow: hidden;
 }
 
 .table-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid var(--panel-border);
 }
 
 .table-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
+  color: var(--text);
 }
 
 .table-responsive {
@@ -393,51 +477,66 @@ table {
 }
 
 th {
-  background-color: #27272a;
-  color: #a1a1aa;
+  background-color: var(--table-header-bg);
+  color: var(--muted);
   padding: 14px 24px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
   text-transform: uppercase;
 }
 
 td {
   padding: 16px 24px;
-  border-bottom: 1px solid #27272a;
-  color: #d4d4d8;
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text);
 }
 
 .font-bold {
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .price-tag {
   font-weight: 700;
-  color: #ea580c;
+  color: #2563eb;
 }
 
 .qty-badge {
-  background-color: #27272a;
-  padding: 4px 8px;
+  background-color: var(--badge-bg);
+  color: var(--badge-text);
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 13px;
-  color: #e4e4e7;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
 }
 
 .empty-state {
   margin-top: 24px;
-  background-color: #18181b;
-  border: 1px solid #27272a;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
   padding: 30px 20px;
   text-align: center;
-  color: #a1a1aa;
+  color: var(--muted);
 }
 
 .empty-state p {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
+}
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .sidebar {
+    display: none;
+  }
+  .topbar {
+    padding: 0 16px;
+  }
+  .content-body {
+    padding: 0 16px 28px 16px;
+  }
 }
 </style>

@@ -1,8 +1,41 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const isNavbarDark = ref(false)
+
+// Cek dan pasang tema saat Dashboard dimuat / di-mount
+onMounted(() => {
+  const savedTheme = localStorage.getItem('admin-theme-mode')
+  if (savedTheme) {
+    isNavbarDark.value = savedTheme === 'dark'
+  }
+
+  // Listener jika terjadi perubahan event dari window
+  const handleThemeChange = (event) => {
+    if (event.detail?.dark !== undefined) {
+      isNavbarDark.value = event.detail.dark
+    }
+  }
+
+  window.addEventListener('admin-theme-change', handleThemeChange)
+})
+
+// Fungsi Toggle Switch Tema (Hanya Ada di Dashboard)
+const toggleNavbarTheme = () => {
+  isNavbarDark.value = !isNavbarDark.value
+  
+  // 1. Simpan status ke localStorage agar halaman lain (Produk, Kategori, dll) bisa membaca
+  localStorage.setItem('admin-theme-mode', isNavbarDark.value ? 'dark' : 'light')
+
+  // 2. Trigger Custom Event untuk komunikasi real-time antar halaman
+  window.dispatchEvent(
+    new CustomEvent('admin-theme-change', {
+      detail: { dark: isNavbarDark.value }
+    })
+  )
+}
 
 // Logo Path & Fallback
 const logoCemilku = ref('/images/cemilku-logo.png')
@@ -24,7 +57,7 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="dashboard-layout">
+  <div class="dashboard-layout" :class="{ 'navbar-dark': isNavbarDark }">
     <!-- SIDEBAR KIRI -->
     <aside class="sidebar">
       <div class="sidebar-brand" @click="router.push('/')">
@@ -87,6 +120,10 @@ const handleLogout = () => {
         </div>
 
         <div class="topbar-right">
+          <!-- HANYA DASHBOARD YANG MEMILIKI TOMBOL SWITCH INI -->
+          <button class="theme-toggle" @click="toggleNavbarTheme" aria-label="Toggle navbar theme">
+            {{ isNavbarDark ? '☀️' : '🌙' }}
+          </button>
           <button class="icon-btn">🔔</button>
           <div class="user-avatar">A</div>
         </div>
@@ -98,9 +135,6 @@ const handleLogout = () => {
         <div class="dashboard-banner">
           <div class="banner-content">
             <h1>Dashboard Overview</h1>
-            <button class="btn-primary-action">
-              <span class="btn-icon">+</span> Tambah Produk
-            </button>
           </div>
         </div>
 
@@ -165,23 +199,49 @@ const handleLogout = () => {
 </template>
 
 <style scoped>
-/* LAYOUT BASE */
 .dashboard-layout {
+  --page-bg: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  --sidebar-bg: rgba(255, 255, 255, 0.8);
+  --sidebar-border: rgba(226, 232, 240, 0.9);
+  --topbar-bg: rgba(255, 255, 255, 0.75);
+  --topbar-border: rgba(226, 232, 240, 0.9);
+  --surface: rgba(255, 255, 255, 0.9);
+  --text: #0f172a;
+  --muted: #64748b;
+  --nav-text: #475569;
+  --nav-hover: #eff6ff;
+  --nav-active: linear-gradient(135deg, #2563eb, #3b82f6);
+  --panel-border: rgba(226, 232, 240, 0.9);
   display: flex;
   min-height: 100vh;
-  background-color: #0f0f0f;
-  color: #ffffff;
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* SIDEBAR KIRI */
+.dashboard-layout.navbar-dark {
+  --page-bg: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+  --sidebar-bg: rgba(15, 23, 42, 0.85);
+  --sidebar-border: rgba(51, 65, 85, 0.9);
+  --topbar-bg: rgba(15, 23, 42, 0.8);
+  --topbar-border: rgba(51, 65, 85, 0.9);
+  --surface: rgba(15, 23, 42, 0.8);
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --nav-text: #cbd5e1;
+  --nav-hover: rgba(59, 130, 246, 0.12);
+  --nav-active: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  --panel-border: rgba(51, 65, 85, 0.9);
+}
+
 .sidebar {
   width: 250px;
-  background-color: #18181b;
-  border-right: 1px solid #27272a;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  backdrop-filter: blur(14px);
 }
 
 .sidebar-brand {
@@ -189,7 +249,7 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
@@ -202,13 +262,14 @@ const handleLogout = () => {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #fb923c, #ea580c);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   padding: 3px;
   flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
 }
 
 .cemilku-logo-img {
@@ -226,7 +287,7 @@ const handleLogout = () => {
 .brand-text {
   font-weight: 800;
   font-size: 1.3rem;
-  color: #ffffff;
+  color: var(--text);
   letter-spacing: -0.05em;
   line-height: 1.1;
 }
@@ -234,8 +295,8 @@ const handleLogout = () => {
 .brand-info small {
   font-size: 0.58rem;
   letter-spacing: 0.16em;
-  color: #a1a1aa;
-  font-weight: 600;
+  color: #2563eb;
+  font-weight: 700;
   text-transform: uppercase;
   margin-top: 2px;
 }
@@ -250,7 +311,7 @@ const handleLogout = () => {
 .menu-category {
   font-size: 10px;
   font-weight: 700;
-  color: #71717a;
+  color: var(--muted);
   padding: 12px 12px 4px 12px;
   letter-spacing: 0.5px;
 }
@@ -260,30 +321,31 @@ const handleLogout = () => {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  color: #a1a1aa;
+  color: var(--nav-text);
   text-decoration: none;
   font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.2s;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s ease;
 }
 
-.menu-item:hover, .menu-item.router-link-active {
-  background-color: #27272a;
-  color: #ffffff;
+.menu-item:hover,
+.menu-item.router-link-active {
+  background: var(--nav-hover);
+  color: var(--text);
 }
 
 .menu-item.router-link-active.active,
 .menu-item.active {
-  background-color: #ea580c;
+  background: var(--nav-active);
   color: #ffffff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
 }
 
 .menu-item.logout {
-  color: #ef4444;
+  color: #dc2626;
 }
 
-/* MAIN WRAPPER */
 .main-wrapper {
   flex: 1;
   display: flex;
@@ -291,24 +353,25 @@ const handleLogout = () => {
   overflow-x: hidden;
 }
 
-/* TOPBAR */
 .topbar {
   height: 64px;
-  background-color: #18181b;
-  border-bottom: 1px solid #27272a;
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
+  backdrop-filter: blur(14px);
 }
 
 .search-box {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #27272a;
+  background: rgba(148, 163, 184, 0.06);
+  border: 1px solid var(--panel-border);
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   width: 300px;
 }
 
@@ -316,7 +379,7 @@ const handleLogout = () => {
   background: transparent;
   border: none;
   outline: none;
-  color: #ffffff;
+  color: var(--text);
   font-size: 13px;
   width: 100%;
 }
@@ -327,37 +390,48 @@ const handleLogout = () => {
   gap: 16px;
 }
 
+.theme-toggle,
 .icon-btn {
-  background: transparent;
-  border: none;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 16px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
 }
 
 .user-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background-color: #ea580c;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: #ffffff;
   display: grid;
   place-items: center;
   font-weight: 700;
 }
 
-/* CONTENT BODY */
 .content-body {
   padding: 0 28px 28px 28px;
 }
 
-/* DASHBOARD BANNER BAR */
 .dashboard-banner {
-  background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
-  border: 1px solid #3f3f46;
-  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(191, 219, 254, 0.9), rgba(239, 246, 255, 0.9));
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  border-radius: 16px;
   padding: 28px;
   margin-top: 24px;
   padding-bottom: 60px;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.08);
+}
+
+.dashboard-layout.navbar-dark .dashboard-banner {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+  border-color: rgba(51, 65, 85, 0.9);
 }
 
 .banner-content {
@@ -368,24 +442,24 @@ const handleLogout = () => {
 
 .banner-content h1 {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
+  color: var(--text);
 }
 
-/* ANIMATED BUTTON PRIMARY ACTION */
 .btn-primary-action {
-  background: linear-gradient(135deg, #fb923c, #ea580c);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: #ffffff;
   border: none;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -396,9 +470,8 @@ const handleLogout = () => {
 }
 
 .btn-primary-action:hover {
-  background: linear-gradient(135deg, #f97316, #c2410c);
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
 }
 
 .btn-primary-action:hover .btn-icon {
@@ -407,10 +480,9 @@ const handleLogout = () => {
 
 .btn-primary-action:active {
   transform: translateY(-1px) scale(0.98);
-  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
 }
 
-/* STAT CARDS */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -420,11 +492,11 @@ const handleLogout = () => {
 }
 
 .stat-card {
-  background-color: #18181b;
-  border: 1px solid #27272a;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
   padding: 20px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.08);
 }
 
 .stat-header {
@@ -435,49 +507,51 @@ const handleLogout = () => {
 
 .stat-label {
   font-size: 13px;
-  color: #a1a1aa;
+  color: var(--muted);
   font-weight: 600;
 }
 
 .stat-icon-wrapper {
-  background-color: #27272a;
+  background: #eff6ff;
   width: 32px;
   height: 32px;
   border-radius: 8px;
   display: grid;
   place-items: center;
   font-size: 14px;
+  border: 1px solid #bfdbfe;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: 800;
   margin: 12px 0 4px 0;
+  color: var(--text);
 }
 
 .stat-sub {
   font-size: 12px;
-  color: #71717a;
+  color: var(--muted);
 }
 
-/* TABLE CARD */
 .table-card {
-  background-color: #18181b;
-  border: 1px solid #27272a;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
   margin-top: 24px;
   overflow: hidden;
 }
 
 .table-header {
   padding: 20px 24px;
-  border-bottom: 1px solid #27272a;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .table-header h3 {
   margin: 0;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--text);
 }
 
 .table-responsive {
@@ -492,26 +566,25 @@ table {
 }
 
 th {
-  background-color: #27272a;
-  color: #a1a1aa;
+  background: rgba(148, 163, 184, 0.06);
+  color: var(--muted);
   padding: 14px 24px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
   text-transform: uppercase;
 }
 
 td {
   padding: 16px 24px;
-  border-bottom: 1px solid #27272a;
-  color: #d4d4d8;
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text);
 }
 
 .font-bold {
-  font-weight: 600;
-  color: #ffffff;
+  font-weight: 700;
+  color: var(--text);
 }
 
-/* STATUS BADGES */
 .status-badge {
   padding: 4px 10px;
   border-radius: 20px;
@@ -520,33 +593,33 @@ td {
 }
 
 .status-success {
-  background-color: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
 }
 
 .status-warning {
-  background-color: rgba(234, 179, 8, 0.15);
-  color: #facc15;
+  background: rgba(250, 204, 21, 0.14);
+  color: #a16207;
 }
 
 .status-danger {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
 }
 
 .empty-state {
   margin-top: 24px;
-  background-color: #18181b;
-  border: 1px solid #27272a;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
   padding: 30px 20px;
   text-align: center;
-  color: #a1a1aa;
+  color: var(--muted);
 }
 
 .empty-state p {
   margin: 0;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 </style>

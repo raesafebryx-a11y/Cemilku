@@ -5,115 +5,69 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 // =========================================================
-// TEMA SYSTEM (DIBACA DARI LOCALSTORAGE)
+// TEMA SYSTEM (DIBACA DARI LOCALSTORAGE & EVENT LISTENER)
 // =========================================================
-const isNavbarDark = ref(false)
+const isAdminDark = ref(localStorage.getItem('admin-theme-mode') === 'dark')
 
 onMounted(() => {
-  // 1. Baca status tema dari localStorage
-  const savedTheme = localStorage.getItem('admin-theme-mode')
-  if (savedTheme) {
-    isNavbarDark.value = savedTheme === 'dark'
-  }
-
-  // Listener event perubahan tema jika diubah dari tab/komponen lain
   const handleThemeChange = (event) => {
-    if (event.detail?.dark !== undefined) {
-      isNavbarDark.value = event.detail.dark
-    }
+    const nextDark = event.detail?.dark ?? localStorage.getItem('admin-theme-mode') === 'dark'
+    isAdminDark.value = nextDark
   }
+
   window.addEventListener('admin-theme-change', handleThemeChange)
-
-  // 2. Ambil data kategori dari localStorage
-  loadCategories()
 })
-
-// =========================================================
-// DATA KATEGORI
-// =========================================================
-const categories = ref([])
-
-const loadCategories = () => {
-  const savedCategories = localStorage.getItem('cemilku_categories')
-  if (savedCategories) {
-    try {
-      categories.value = JSON.parse(savedCategories)
-    } catch (e) {
-      categories.value = []
-    }
-  }
-}
 
 // Logo Path & Fallback
 const logoCemilku = ref('/images/cemilku-logo.png')
+
 const handleLogoError = (e) => {
   e.target.src = 'https://cdn-icons-png.flaticon.com/512/2553/2553691.png'
 }
 
 // =========================================================
-// FORM PRODUK
+// FORM KATEGORI
 // =========================================================
 const form = ref({
   name: '',
-  category: '',
-  price: '',
-  stock: '',
-  description: '',
-  image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&auto=format&fit=crop&q=60'
+  description: ''
 })
 
 // =========================================================
-// FORMAT HARGA
-// =========================================================
-const formatPrice = (price) => {
-  if (!price) return 'Rp 0'
-
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0
-  }).format(price)
-}
-
-// =========================================================
-// SIMPAN PRODUK
+// SIMPAN KATEGORI
 // =========================================================
 const handleSubmit = () => {
-  if (!form.value.name || !form.value.price || !form.value.stock) {
-    alert('Mohon lengkapi data produk terlebih dahulu.')
+  if (!form.value.name) {
+    alert('Mohon isi nama kategori terlebih dahulu.')
     return
   }
 
-  let products = []
+  let categories = []
   try {
-    products = JSON.parse(localStorage.getItem('cemilku_products') || '[]')
+    categories = JSON.parse(localStorage.getItem('cemilku_categories') || '[]')
   } catch (e) {
-    products = []
+    categories = []
   }
 
-  const newProduct = {
+  const newCategory = {
     id: Date.now(),
     name: form.value.name,
-    category: form.value.category || 'Tanpa Kategori',
-    price: Number(form.value.price),
-    stock: Number(form.value.stock),
-    description: form.value.description,
-    status: Number(form.value.stock) > 10 ? 'Tersedia' : Number(form.value.stock) > 0 ? 'Stok Menipis' : 'Habis',
-    image: form.value.image || 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&auto=format&fit=crop&q=60'
+    description: form.value.description
   }
 
-  products.push(newProduct)
-  localStorage.setItem('cemilku_products', JSON.stringify(products))
+  categories.push(newCategory)
 
-  alert('Produk berhasil ditambahkan!')
-  router.push('/admin/produk')
+  localStorage.setItem('cemilku_categories', JSON.stringify(categories))
+
+  alert('Kategori berhasil ditambahkan!')
+  router.push('/admin/kategori')
 }
 
 // =========================================================
 // KEMBALI
 // =========================================================
 const handleCancel = () => {
-  router.push('/admin/produk')
+  router.push('/admin/kategori')
 }
 
 // =========================================================
@@ -126,9 +80,12 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="dashboard-layout" :class="{ 'navbar-dark': isNavbarDark }">
-    <!-- SIDEBAR KIRI -->
+  <div class="dashboard-layout" :class="{ 'navbar-dark': isAdminDark }">
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
     <aside class="sidebar">
+      <!-- BRAND CEMILKU -->
       <div class="sidebar-brand" @click="router.push('/')">
         <div class="brand-mark">
           <img
@@ -139,12 +96,14 @@ const handleLogout = () => {
             @error="handleLogoError"
           />
         </div>
+
         <div class="brand-info">
           <span class="brand-text">Cemilku</span>
           <small>SNACK STORE</small>
         </div>
       </div>
 
+      <!-- MENU SIDEBAR -->
       <nav class="sidebar-menu">
         <div class="menu-category">MAIN</div>
         <router-link to="/admin" class="menu-item">
@@ -153,12 +112,12 @@ const handleLogout = () => {
         </router-link>
 
         <div class="menu-category">KELOLA TOKO</div>
-        <router-link to="/admin/produk" class="menu-item active">
+        <router-link to="/admin/produk" class="menu-item">
           <span class="menu-icon">🍿</span>
           <span>Produk</span>
         </router-link>
 
-        <router-link to="/admin/kategori" class="menu-item">
+        <router-link to="/admin/kategori" class="menu-item active">
           <span class="menu-icon">🏷️</span>
           <span>Kategori</span>
         </router-link>
@@ -179,6 +138,7 @@ const handleLogout = () => {
           <span>Pengaturan</span>
         </router-link>
 
+        <!-- LOGOUT -->
         <a href="#" class="menu-item logout" @click.prevent="handleLogout">
           <span class="menu-icon">🚪</span>
           <span>Keluar</span>
@@ -186,13 +146,15 @@ const handleLogout = () => {
       </nav>
     </aside>
 
-    <!-- MAIN WRAPPER -->
+    <!-- =====================================================
+         MAIN WRAPPER
+    ====================================================== -->
     <div class="main-wrapper">
       <!-- TOPBAR -->
       <header class="topbar">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Cari produk..." />
+          <input type="text" placeholder="Cari kategori..." />
         </div>
 
         <div class="topbar-right">
@@ -201,23 +163,24 @@ const handleLogout = () => {
         </div>
       </header>
 
-      <!-- CONTENT BODY -->
+      <!-- CONTENT -->
       <main class="content-body">
-        <!-- BANNER HEADER -->
+        <!-- BANNER -->
         <section class="dashboard-banner">
           <div class="banner-content">
             <div class="banner-left">
               <div class="breadcrumb">
-                <span>Produk</span>
+                <span>Kategori</span>
                 <b>›</b>
-                <strong>Tambah Produk</strong>
+                <strong>Tambah Kategori</strong>
               </div>
-              <h1>Tambah Produk Baru</h1>
+              <h1>Tambah Kategori Baru</h1>
               <p class="banner-sub">
-                Tambahkan produk makanan ringan baru ke toko Cemilku.
+                Atur dan kelompokkan menu snack untuk mempermudah pencarian produk.
               </p>
             </div>
 
+            <!-- KEMBALI -->
             <button type="button" class="btn-back" @click="handleCancel">
               <span>←</span> Kembali
             </button>
@@ -226,141 +189,71 @@ const handleLogout = () => {
 
         <!-- FORM CARD -->
         <section class="form-card">
+          <!-- HEADER FORM -->
           <div class="form-header">
             <div>
-              <h3>Informasi Produk</h3>
-              <p>Isi informasi produk dengan lengkap dan benar.</p>
+              <h3>Informasi Kategori</h3>
+              <p>Isi informasi nama dan deskripsi kategori dengan benar.</p>
             </div>
-            <div class="form-icon">📦</div>
+
+            <!-- IKON KATEGORI -->
+            <div class="form-icon">🏷️</div>
           </div>
 
+          <!-- FORM -->
           <form class="product-form" @submit.prevent="handleSubmit">
-            <!-- NAMA & KATEGORI -->
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="product-name">
-                  Nama Produk <span>*</span>
-                </label>
-                <input
-                  id="product-name"
-                  v-model="form.name"
-                  type="text"
-                  placeholder="Contoh: Basreng Pedas Jeruk"
-                  autocomplete="off"
-                />
-                <small>Masukkan nama produk yang mudah dikenali.</small>
-              </div>
-
-              <div class="form-group">
-                <label for="product-category">Kategori</label>
-                <select
-                  id="product-category"
-                  v-model="form.category"
-                  :disabled="categories.length === 0"
-                >
-                  <option value="">
-                    {{
-                      categories.length === 0
-                        ? 'Belum ada kategori'
-                        : 'Pilih kategori'
-                    }}
-                  </option>
-                  <option
-                    v-for="category in categories"
-                    :key="category.id || category.name"
-                    :value="category.name || category"
-                  >
-                    {{ category.name || category }}
-                  </option>
-                </select>
-                <small v-if="categories.length === 0">
-                  Belum ada kategori yang tersedia.
-                </small>
-                <small v-else>
-                  Pilih kategori yang sesuai dengan produk.
-                </small>
-              </div>
-            </div>
-
-            <!-- HARGA & STOK -->
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="product-price">
-                  Harga Produk <span>*</span>
-                </label>
-                <div class="input-prefix">
-                  <span>Rp</span>
-                  <input
-                    id="product-price"
-                    v-model="form.price"
-                    type="number"
-                    min="0"
-                    placeholder="15000"
-                  />
-                </div>
-                <small>Masukkan harga produk dalam Rupiah.</small>
-              </div>
-
-              <div class="form-group">
-                <label for="product-stock">
-                  Stok Produk <span>*</span>
-                </label>
-                <div class="input-suffix">
-                  <input
-                    id="product-stock"
-                    v-model="form.stock"
-                    type="number"
-                    min="0"
-                    placeholder="50"
-                  />
-                  <span>pcs</span>
-                </div>
-                <small>Jumlah stok produk yang tersedia.</small>
-              </div>
-            </div>
-
-            <!-- DESKRIPSI -->
+            <!-- NAMA KATEGORI -->
             <div class="form-group full">
-              <label for="product-description">Deskripsi Produk</label>
+              <label for="category-name">
+                Nama Kategori <span>*</span>
+              </label>
+              <input
+                id="category-name"
+                v-model="form.name"
+                type="text"
+                placeholder="Contoh: Keripik & Basreng"
+                autocomplete="off"
+              />
+              <small>Masukkan nama kategori produk yang jelas dan relevan.</small>
+            </div>
+
+            <!-- DESKRIPSI KATEGORI -->
+            <div class="form-group full">
+              <label for="category-description">Deskripsi Kategori</label>
               <textarea
-                id="product-description"
+                id="category-description"
                 v-model="form.description"
                 rows="5"
-                placeholder="Contoh: Basreng pedas dengan rasa jeruk yang gurih, renyah, dan cocok untuk teman santai."
+                placeholder="Contoh: Aneka produk olahan keripik renyah dengan varian rasa pedas dan gurih."
               ></textarea>
-              <small>Jelaskan rasa, ukuran, keunggulan, atau informasi lainnya.</small>
+              <small>Berikan penjelasan singkat mengenai kelompok produk dalam kategori ini.</small>
             </div>
 
-            <!-- RINGKASAN PRODUK -->
-            <div v-if="form.name || form.price || form.stock" class="product-summary">
-              <div class="summary-title">Ringkasan Produk</div>
+            <!-- RINGKASAN -->
+            <div v-if="form.name || form.description" class="product-summary">
+              <div class="summary-title">Ringkasan Kategori</div>
+
               <div class="summary-grid">
                 <div class="summary-item">
-                  <span>Nama</span>
+                  <span>Nama Kategori</span>
                   <strong>{{ form.name || '-' }}</strong>
                 </div>
-                <div class="summary-item">
-                  <span>Kategori</span>
-                  <strong>{{ form.category || 'Belum dipilih' }}</strong>
-                </div>
-                <div class="summary-item">
-                  <span>Harga</span>
-                  <strong class="summary-price">{{ formatPrice(form.price) }}</strong>
-                </div>
-                <div class="summary-item">
-                  <span>Stok</span>
-                  <strong>{{ form.stock || 0 }} pcs</strong>
+
+                <div class="summary-item full-summary">
+                  <span>Deskripsi</span>
+                  <strong>{{ form.description || 'Tidak ada deskripsi' }}</strong>
                 </div>
               </div>
             </div>
 
-            <!-- TOMBOL AKSI -->
+            <!-- BUTTON -->
             <div class="form-actions">
               <button type="button" class="btn-cancel" @click="handleCancel">
                 Batal
               </button>
+
               <button type="submit" class="btn-save">
-                <span>✓</span> Simpan Produk
+                <span>✓</span> Simpan Kategori
               </button>
             </div>
           </form>
@@ -372,14 +265,14 @@ const handleLogout = () => {
 
 <style scoped>
 /* =========================================================
-   THEME VARIABLES & LAYOUT
+   CEMILKU ADMIN - DYNAMIC THEME VARIABLES
 ========================================================= */
 .dashboard-layout {
   --page-bg: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
-  --sidebar-bg: rgba(255, 255, 255, 0.8);
-  --sidebar-border: rgba(226, 232, 240, 0.9);
-  --topbar-bg: rgba(255, 255, 255, 0.75);
-  --topbar-border: rgba(226, 232, 240, 0.9);
+  --sidebar-bg: rgba(255, 255, 255, 0.82);
+  --sidebar-border: rgba(226, 232, 240, 0.95);
+  --topbar-bg: rgba(255, 255, 255, 0.78);
+  --topbar-border: rgba(226, 232, 240, 0.95);
   --surface: rgba(255, 255, 255, 0.9);
   --input-bg: #ffffff;
   --text: #0f172a;
@@ -388,6 +281,7 @@ const handleLogout = () => {
   --nav-hover: #eff6ff;
   --nav-active: linear-gradient(135deg, #2563eb, #3b82f6);
   --panel-border: rgba(226, 232, 240, 0.9);
+  
   display: flex;
   min-height: 100vh;
   width: 100%;
@@ -396,14 +290,13 @@ const handleLogout = () => {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* DARK MODE VARS */
 .dashboard-layout.navbar-dark {
   --page-bg: linear-gradient(180deg, #0f172a 0%, #111827 100%);
   --sidebar-bg: rgba(15, 23, 42, 0.85);
   --sidebar-border: rgba(51, 65, 85, 0.9);
   --topbar-bg: rgba(15, 23, 42, 0.8);
   --topbar-border: rgba(51, 65, 85, 0.9);
-  --surface: rgba(15, 23, 42, 0.8);
+  --surface: rgba(15, 23, 42, 0.82);
   --input-bg: #1e293b;
   --text: #f8fafc;
   --muted: #cbd5e1;
@@ -418,6 +311,7 @@ const handleLogout = () => {
 ========================================================= */
 .sidebar {
   width: 250px;
+  min-height: 100vh;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--sidebar-border);
   display: flex;
@@ -467,34 +361,34 @@ const handleLogout = () => {
 }
 
 .brand-text {
-  font-weight: 800;
-  font-size: 1.3rem;
   color: var(--text);
+  font-size: 1.3rem;
+  font-weight: 800;
   letter-spacing: -0.05em;
   line-height: 1.1;
 }
 
 .brand-info small {
-  font-size: 0.58rem;
-  letter-spacing: 0.16em;
-  color: #2563eb;
-  font-weight: 700;
-  text-transform: uppercase;
   margin-top: 2px;
+  color: #2563eb;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .sidebar-menu {
-  padding: 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 20px 12px;
 }
 
 .menu-category {
+  padding: 12px 12px 4px;
+  color: var(--muted);
   font-size: 10px;
   font-weight: 700;
-  color: var(--muted);
-  padding: 12px 12px 4px 12px;
   letter-spacing: 0.5px;
 }
 
@@ -503,11 +397,11 @@ const handleLogout = () => {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
+  border-radius: 10px;
   color: var(--nav-text);
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
-  border-radius: 10px;
   transition: all 0.2s ease;
 }
 
@@ -526,15 +420,22 @@ const handleLogout = () => {
 
 .menu-icon {
   width: 20px;
+  min-width: 20px;
   text-align: center;
+  font-size: 15px;
 }
 
 .menu-item.logout {
   color: #ef4444;
 }
 
+.menu-item.logout:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
 /* =========================================================
-   MAIN & TOPBAR
+   MAIN WRAPPER & TOPBAR
 ========================================================= */
 .main-wrapper {
   flex: 1;
@@ -546,33 +447,44 @@ const handleLogout = () => {
 
 .topbar {
   height: 64px;
+  min-height: 64px;
+  padding: 0 28px;
   background: var(--topbar-bg);
   border-bottom: 1px solid var(--topbar-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
   backdrop-filter: blur(14px);
 }
 
 .search-box {
+  width: 300px;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 14px;
   background: rgba(148, 163, 184, 0.06);
   border: 1px solid var(--panel-border);
-  padding: 8px 14px;
   border-radius: 10px;
-  width: 300px;
+}
+
+.search-icon {
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .search-box input {
-  background: transparent;
+  width: 100%;
+  padding: 0;
   border: none;
   outline: none;
+  background: transparent;
   color: var(--text);
   font-size: 13px;
-  width: 100%;
+}
+
+.search-box input::placeholder {
+  color: var(--muted);
 }
 
 .topbar-right {
@@ -606,15 +518,17 @@ const handleLogout = () => {
 }
 
 /* =========================================================
-   CONTENT BODY & BANNER
+   CONTENT & BANNER
 ========================================================= */
 .content-body {
+  width: 100%;
+  box-sizing: border-box;
   padding: 0 28px 40px;
 }
 
 .dashboard-banner {
   margin-top: 24px;
-  padding: 24px 28px;
+  padding: 28px;
   background: var(--surface);
   border: 1px solid var(--panel-border);
   border-radius: 16px;
@@ -628,28 +542,39 @@ const handleLogout = () => {
   gap: 20px;
 }
 
+.banner-left {
+  min-width: 0;
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: var(--muted);
   font-size: 12px;
 }
 
 .breadcrumb b {
   color: #2563eb;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.breadcrumb strong {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .banner-content h1 {
   margin: 0;
+  color: var(--text);
   font-size: 22px;
   font-weight: 800;
-  color: var(--text);
 }
 
 .banner-sub {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
@@ -691,19 +616,19 @@ const handleLogout = () => {
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 26px;
-  padding-bottom: 20px;
+  padding-bottom: 22px;
   border-bottom: 1px solid var(--panel-border);
 }
 
 .form-header h3 {
   margin: 0;
+  color: var(--text);
   font-size: 17px;
   font-weight: 800;
-  color: var(--text);
 }
 
 .form-header p {
-  margin: 4px 0 0;
+  margin: 5px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
@@ -716,19 +641,17 @@ const handleLogout = () => {
   border: 1px solid rgba(37, 99, 235, 0.2);
   display: grid;
   place-items: center;
-  font-size: 20px;
+  font-size: 21px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
-  margin-bottom: 22px;
+.product-form {
+  width: 100%;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .form-group.full {
@@ -744,10 +667,10 @@ const handleLogout = () => {
 
 .form-group label span {
   color: #ef4444;
+  margin-left: 2px;
 }
 
 .form-group input,
-.form-group select,
 .form-group textarea {
   width: 100%;
   box-sizing: border-box;
@@ -762,12 +685,18 @@ const handleLogout = () => {
   transition: all 0.2s ease;
 }
 
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--muted);
+}
+
 .form-group textarea {
+  min-height: 100px;
   resize: vertical;
+  line-height: 1.6;
 }
 
 .form-group input:focus,
-.form-group select:focus,
 .form-group textarea:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
@@ -777,43 +706,7 @@ const handleLogout = () => {
   margin-top: 6px;
   color: var(--muted);
   font-size: 11px;
-}
-
-/* INPUT PREFIX & SUFFIX */
-.input-prefix,
-.input-suffix {
-  display: flex;
-  align-items: stretch;
-}
-
-.input-prefix span,
-.input-suffix span {
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  border: 1px solid var(--panel-border);
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.input-prefix span {
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-}
-
-.input-prefix input {
-  border-radius: 0 10px 10px 0;
-}
-
-.input-suffix input {
-  border-radius: 10px 0 0 10px;
-}
-
-.input-suffix span {
-  border-left: none;
-  border-radius: 0 10px 10px 0;
+  line-height: 1.4;
 }
 
 /* =========================================================
@@ -821,27 +714,28 @@ const handleLogout = () => {
 ========================================================= */
 .product-summary {
   margin-bottom: 24px;
-  padding: 20px;
+  padding: 18px;
   background: rgba(148, 163, 184, 0.05);
   border: 1px solid var(--panel-border);
   border-radius: 12px;
 }
 
 .summary-title {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  color: var(--text);
   font-size: 13px;
   font-weight: 700;
-  color: var(--text);
 }
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 1fr 2fr;
   gap: 12px;
 }
 
 .summary-item {
-  padding: 12px 14px;
+  min-width: 0;
+  padding: 14px;
   background: var(--surface);
   border: 1px solid var(--panel-border);
   border-radius: 10px;
@@ -849,36 +743,32 @@ const handleLogout = () => {
 
 .summary-item span {
   display: block;
-  font-size: 11px;
+  margin-bottom: 6px;
   color: var(--muted);
-  margin-bottom: 4px;
+  font-size: 11px;
 }
 
 .summary-item strong {
   display: block;
+  overflow: hidden;
+  color: var(--text);
   font-size: 13px;
   font-weight: 700;
-  color: var(--text);
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.summary-price {
-  color: #2563eb !important;
 }
 
 .form-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   padding-top: 24px;
   border-top: 1px solid var(--panel-border);
 }
 
 .btn-cancel {
-  padding: 11px 22px;
+  padding: 11px 20px;
   border: 1px solid var(--panel-border);
   border-radius: 10px;
   background: var(--surface);
@@ -896,6 +786,7 @@ const handleLogout = () => {
 .btn-save {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 11px 24px;
   border: none;
@@ -914,15 +805,30 @@ const handleLogout = () => {
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
 }
 
+.btn-save:active {
+  transform: translateY(0);
+}
+
 /* =========================================================
    RESPONSIVE
 ========================================================= */
+@media (max-width: 1000px) {
+  .sidebar {
+    width: 220px;
+  }
+}
+
 @media (max-width: 800px) {
-  .form-grid {
+  .summary-grid {
     grid-template-columns: 1fr;
   }
-  .summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .banner-content {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .btn-back {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -930,19 +836,47 @@ const handleLogout = () => {
   .sidebar {
     display: none;
   }
+  .topbar {
+    padding: 0 16px;
+  }
+  .search-box {
+    width: 220px;
+  }
   .content-body {
     padding: 0 16px 30px;
   }
-  .summary-grid {
-    grid-template-columns: 1fr;
+  .dashboard-banner {
+    padding: 20px;
+  }
+  .form-card {
+    padding: 20px;
   }
   .form-actions {
     flex-direction: column-reverse;
+    align-items: stretch;
   }
   .btn-cancel,
   .btn-save {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 450px) {
+  .search-box {
+    width: 160px;
+  }
+  .topbar-right {
+    gap: 8px;
+  }
+  .dashboard-banner {
+    padding: 18px;
+  }
+  .form-card {
+    padding: 16px;
+  }
+  .banner-content h1 {
+    font-size: 20px;
   }
 }
 </style>
