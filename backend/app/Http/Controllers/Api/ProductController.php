@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -23,13 +24,27 @@ class ProductController extends Controller
             'spicy_level' => 'nullable|string',
             'tag'         => 'nullable|string',
             'description' => 'nullable|string',
-            'image_url'   => 'nullable|string',
-            'stock'       => 'required|integer|min:0',
+            'stock'       => 'nullable|integer|min:0',
+            // Mendukung file upload (foto) atau string URL opsional
+            'image_url'   => 'nullable',
         ]);
+
+        // Cek jika request membawa file gambar
+        if ($request->hasFile('image_url')) {
+            $request->validate([
+                'image_url' => 'image|mimes:jpeg,jpg,png,webp|max:2048',
+            ]);
+            $path = $request->file('image_url')->store('products', 'public');
+            $validated['image_url'] = url('storage/' . $path);
+        }
 
         $product = Product::create($validated);
 
-        return response()->json(['status' => true, 'message' => 'Produk berhasil dibuat', 'data' => $product], 201);
+        return response()->json([
+            'status'  => true,
+            'message' => 'Produk berhasil dibuat',
+            'data'    => $product
+        ], 201);
     }
 
     public function show($id)
@@ -55,13 +70,34 @@ class ProductController extends Controller
             'spicy_level' => 'nullable|string',
             'tag'         => 'nullable|string',
             'description' => 'nullable|string',
-            'image_url'   => 'nullable|string',
             'stock'       => 'sometimes|required|integer|min:0',
+            'image_url'   => 'nullable',
         ]);
+
+        // Cek jika ada file gambar baru yang diunggah
+        if ($request->hasFile('image_url')) {
+            $request->validate([
+                'image_url' => 'image|mimes:jpeg,jpg,png,webp|max:2048',
+            ]);
+
+            // Hapus gambar lama jika file fisik tersimpan di storage
+            if ($product->image_url && str_contains($product->image_url, 'storage/products/')) {
+                $oldPath = str_replace(url('storage/'), '', $product->image_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            // Simpan gambar baru
+            $path = $request->file('image_url')->store('products', 'public');
+            $validated['image_url'] = url('storage/' . $path);
+        }
 
         $product->update($validated);
 
-        return response()->json(['status' => true, 'message' => 'Produk berhasil diubah', 'data' => $product], 200);
+        return response()->json([
+            'status'  => true,
+            'message' => 'Produk berhasil diubah',
+            'data'    => $product
+        ], 200);
     }
 
     public function destroy($id)
@@ -69,6 +105,12 @@ class ProductController extends Controller
         $product = Product::find($id);
         if (!$product) {
             return response()->json(['status' => false, 'message' => 'Produk tidak ditemukan'], 404);
+        }
+
+        // Hapus file gambar fisik dari storage jika ada
+        if ($product->image_url && str_contains($product->image_url, 'storage/products/')) {
+            $oldPath = str_replace(url('storage/'), '', $product->image_url);
+            Storage::disk('public')->delete($oldPath);
         }
 
         $product->delete();
